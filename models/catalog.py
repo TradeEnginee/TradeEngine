@@ -1,3 +1,4 @@
+import random
 class Catalog:
     def __init__(self):
         self.products = []
@@ -13,5 +14,9 @@ class Catalog:
         return results
 
     def get_random_products(self, count=5):
-        import random
-        return random.sample(self.products, min(count, len(self.products)))
+     max_count = min(count, len(self.products))
+
+     selected_products = random.sample(self.products, max_count)
+
+     return selected_products
+
