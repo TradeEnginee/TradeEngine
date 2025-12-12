@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 class Product(ABC):
     next_id = 1
-    def _init_(self, name, price, image_url, category):
+    def __init__(self, name, price, image_url, category):
        allowed_categories = ["Cosmetics", "Electronics", "Food", "Clothes", "Sports"]
        if category not in allowed_categories:
               raise ValueError(f"Category '{category}' is not allowed. Choose from {allowed_categories}.")  
