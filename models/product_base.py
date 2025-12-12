@@ -1,10 +1,17 @@
-class Product:
-    def __init__(self, id, name, price, image_url, category):
-        self.id = id
-        self.name = name
-        self.price = price
-        self.image_url = image_url
-        self.category = category
+from abc import ABC, abstractmethod
 
-    def get_specifications(self):
-        return {}
+class Product(ABC):
+    next_id = 1
+    def _init_(self, name, price, image_url, category):
+       allowed_categories = ["Cosmetics", "Electronics", "Food", "Clothes", "Sports"]
+       if category not in allowed_categories:
+              raise ValueError(f"Category '{category}' is not allowed. Choose from {allowed_categories}.")  
+       self.id = Product.next_id
+       Product.next_id += 1
+       self.name = name
+       self.price = price
+       self.image_url = image_url
+       self.category = category
+    @abstractmethod
+    def get_details(self):
+           pass
