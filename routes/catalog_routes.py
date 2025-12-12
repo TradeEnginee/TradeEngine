@@ -54,6 +54,19 @@ def search():
     })
 
 
+@app.route("/home/sorted/<sort_type>")
+def home_sorted(sort_type):
+    sort_map = {
+        "asc": "Ascending",
+        "desc": "Descending",
+        "a-z": "A-Z",
+        "z-a": "Z-A"
+    }
+    
+    chosen = sort_map.get(sort_type, "Ascending")
+    all_products = catalog.sort_products_by_price(chosen, category=None)
+    return jsonify([p.get_details() for p in all_products])
+
 # Sort endpoint
 @app.route("/sort/<category_name>/<sort_type>")
 def sort_products(category_name, sort_type):
