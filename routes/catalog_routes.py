@@ -5,6 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask import Flask, jsonify, request
 from models.catalog import Catalog
 from models.product_types import CosmeticsProduct, ElectronicProduct, FoodProduct, ClothesProduct, SportsProduct
+from models.search_engine import SearchEngine
 
 app = Flask(__name__)
 catalog = Catalog()
@@ -28,11 +29,30 @@ def category_page(category_name):
     products = catalog.get_all_products_shuffled(category_name)
     return jsonify([p.get_details() for p in products])
 
-# Search endpoint
-# @app.route("/search")
-# def search():
-#     query = request.args.get('q', '')
-#     return jsonify({"message": "Search functionality coming soon"})
+@app.route("/search")
+def search():
+    query = request.args.get('q', '').strip()
+    
+    if not query:
+        return jsonify({"error": "Please provide a search query"}), 400
+    
+    search_engine = SearchEngine(catalog)
+    
+    results = search_engine.search_with_suggestions(query)
+    
+    if not results:
+        return jsonify({
+            "message": "No products found",
+            "query": query,
+            "suggestions": ["Try different keywords", "Check spelling"]
+        })
+    
+    return jsonify({
+        "query": query,
+        "count": len(results),
+        "results": [p.get_details() for p in results]
+    })
+
 
 # Sort endpoint
 @app.route("/sort/<category_name>/<sort_type>")
