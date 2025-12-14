@@ -10,7 +10,7 @@ class Catalog:
     def get_products_by_category(self, category):
         results = []
         for p in self.products:
-            if p.category.lower() == category.lower():
+            if p["category"].lower() == category.lower():
                 results.append(p)
         return results
 

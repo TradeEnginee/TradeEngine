@@ -60,3 +60,8 @@ class Product(ABC):
     @abstractmethod
     def get_details(self):
         pass
+    def __repr__(self):
+        return str(self.get_details())
+
+    def __getitem__(self, key):
+        return self.get_details()[key]
