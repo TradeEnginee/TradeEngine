@@ -1,6 +1,6 @@
 class SearchEngine:
-    def __init__(self, catalog):
-        self.catalog = catalog
+    def __init__(self, output):
+        self.output = output
     
     def _split_into_keywords(self, query):
         
@@ -26,7 +26,7 @@ class SearchEngine:
             return []
         
         results = []
-        for product in self.catalog.products:
+        for product in self.output:
             if self._matches_product(product, keywords):
                 results.append(product)
         
