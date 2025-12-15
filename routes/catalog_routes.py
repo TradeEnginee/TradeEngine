@@ -10,7 +10,7 @@ from models.search_engine import SearchEngine
 app = Flask(__name__)
 catalog = Catalog()
 
-# 🔧 Sample data :
+#  Sample data :
 catalog.add_product(CosmeticsProduct("Lipstick", 20, "lipstick.jpg", "Cosmetics", "Maybelline", "Oily"))
 catalog.add_product(ElectronicProduct("Headphones", 50, "headphones.jpg", "Electronics", "Sony", 2))
 catalog.add_product(FoodProduct("Chocolate", 10, "chocolate.jpg", "Food", "2024-12-31"))
@@ -35,8 +35,8 @@ def search():
     
     if not query:
         return jsonify({"error": "Please provide a search query"}), 400
-    
-    search_engine = SearchEngine(catalog)
+    output = catalog.products
+    search_engine = SearchEngine(output)
     
     results = search_engine.search_with_suggestions(query)
     
