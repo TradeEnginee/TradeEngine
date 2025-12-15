@@ -1,6 +1,7 @@
+from catalog import Catalog
 class SearchEngine:
-    def __init__(self, output):
-        self.output = output
+    def __init__(self, catalog):
+        self.catalog = catalog
     
     def _split_into_keywords(self, query):
         
@@ -8,27 +9,17 @@ class SearchEngine:
             return []
         return query.lower().strip().split()
     
-    def _matches_product(self, product, keywords):
-       
-        search_text = f"{product.name} {product.category} {getattr(product, 'brand', '')} {getattr(product, 'material', '')}"
-        search_text = search_text.lower()
-        
-        for keyword in keywords:
-            if keyword in search_text:
-                return True
-        return False
-    
     def search_products(self, query):
        
         keywords = self._split_into_keywords(query)
         
-        if not keywords:
-            return []
-        
         results = []
-        for product in self.output:
-            if self._matches_product(product, keywords):
-                results.append(product)
+        for product in keywords:
+            for product_item in self.catalog.products:
+             for value in product_item.values():
+               if product.lower() == value.lower():
+                results.append(product_item)
+                break
         
         return results
     
@@ -36,27 +27,25 @@ class SearchEngine:
         
         keywords = self._split_into_keywords(query)
         
-        if not keywords:
-            return []
         
-        scored_results = []
+        result_list = []
+        for product_item in self.catalog.products:
         
-        for product in self.catalog.products:
-            search_text = f"{product.name} {product.category} {getattr(product, 'brand', '')}"
-            search_text = search_text.lower()
-            
             match_count = 0
-            for keyword in keywords:
-                if keyword in search_text:
-                    match_count += 1
             
-            if match_count > 0:
-                scored_results.append({
-                    'product': product,
-                    'match_score': match_count,
-                    'matched_keywords': [k for k in keywords if k in search_text]
-                })
+            for product in keywords:
+             for value in product_item.values():
+               
+               if product.lower() == value.lower():
+                match_count +=1
+            scored_results = {
+                "product": product_item,
+                "match_score": match_count
+            }
+            result_list.append(scored_results)
+
         
-        scored_results.sort(key=lambda x: x['match_score'], reverse=True)
         
-        return [item['product'] for item in scored_results]
+        result_list.sort(key=lambda x: x['match_score'], reverse=True)
+        
+        return [item['product'] for item in result_list if item['match_score'] > 0]
