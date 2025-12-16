@@ -7,6 +7,7 @@ from models.catalog import Catalog
 from models.product_types import CosmeticsProduct, ElectronicProduct, FoodProduct, ClothesProduct, SportsProduct
 from models.search_engine import SearchEngine
 
+
 app = Flask(__name__)
 catalog = Catalog()
 
@@ -83,3 +84,30 @@ def sort_products(category_name, sort_type):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+from models.detailed_product_types import (
+    DetailedCosmeticsProduct,
+    DetailedFoodProduct,
+    DetailedClothesProduct,
+    DetailedSportsProduct
+)
+
+# ← بعد تعريف catalog، عدل البيانات الأولية:
+catalog = Catalog()
+
+# استخدم كلاساتك أنت في العينات:
+catalog.add_product(DetailedCosmeticsProduct("Lipstick", 20, "https://via.placeholder.com/150", "Cosmetics", "Maybelline", "Oily", stock_quantity=3))
+catalog.add_product(DetailedFoodProduct("Chocolate", 10, "https://via.placeholder.com/150", "Food", "2026-12-31", stock_quantity=0))
+catalog.add_product(DetailedClothesProduct("T-Shirt", 15, "https://via.placeholder.com/150", "Clothes", "Nike", "M", stock_quantity=7))
+catalog.add_product(DetailedSportsProduct("Football", 30, "https://via.placeholder.com/150", "Sports", "Rubber", "Football", stock_quantity=2))
+
+@app.route("/product/<int:product_id>")
+def product_detail_page(product_id):
+    product = catalog.get_product_by_id(product_id)
+    if product:  # إذا المنتج موجود
+      return jsonify(product.get_full_details())
+    else:  
+      return jsonify({"error": "Product not found"}), 404
+    
+    
