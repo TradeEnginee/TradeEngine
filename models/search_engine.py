@@ -1,13 +1,14 @@
 from models.catalog import Catalog
 class SearchEngine:
     def __init__(self, catalog):
-        self.catalog = catalog
+        self.catalog = Catalog()
     
     def _split_into_keywords(self, query):
         
         if not query:
-            return self.get_random_products_from_all_categories()
+            return self.catalog.get_random_products_from_all_categories()
         return query.lower().strip().split()
+    
     
     def search_products(self, query):
        
