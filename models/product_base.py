@@ -4,7 +4,7 @@ class Product(ABC):
     next_id = 1
     
     def __init__(self, name, price, image_url, category):
-         
+
         self._id = Product.next_id
         Product.next_id += 1
         
@@ -62,3 +62,4 @@ class Product(ABC):
 
     def __getitem__(self, key):
         return self.get_details()[key]
+    
