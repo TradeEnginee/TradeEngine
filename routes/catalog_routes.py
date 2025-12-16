@@ -93,10 +93,10 @@ from models.detailed_product_types import (
     DetailedSportsProduct
 )
 
-# ← بعد تعريف catalog، عدل البيانات الأولية:
+
 catalog = Catalog()
 
-# استخدم كلاساتك أنت في العينات:
+
 catalog.add_product(DetailedCosmeticsProduct("Lipstick", 20, "https://via.placeholder.com/150", "Cosmetics", "Maybelline", "Oily", stock_quantity=3))
 catalog.add_product(DetailedFoodProduct("Chocolate", 10, "https://via.placeholder.com/150", "Food", "2026-12-31", stock_quantity=0))
 catalog.add_product(DetailedClothesProduct("T-Shirt", 15, "https://via.placeholder.com/150", "Clothes", "Nike", "M", stock_quantity=7))
@@ -105,7 +105,7 @@ catalog.add_product(DetailedSportsProduct("Football", 30, "https://via.placehold
 @app.route("/product/<int:product_id>")
 def product_detail_page(product_id):
     product = catalog.get_product_by_id(product_id)
-    if product:  # إذا المنتج موجود
+    if product:  
       return jsonify(product.get_full_details())
     else:  
       return jsonify({"error": "Product not found"}), 404
