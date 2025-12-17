@@ -10,7 +10,7 @@ schema_path = os.path.join(base_dir, 'schema.sql')
 
 def get_connection():
     # Opens and returns a database connection.
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(db_path, timeout = 10)
     # This line enables accessing columns by name instead of index (Very Important)
     conn.row_factory = sqlite3.Row
     return conn
