@@ -1,40 +1,74 @@
 import sqlite3
 import json
 from werkzeug.security import generate_password_hash
-# Import the connection function from the db_manager file in the same directory
 from Database.db_manager import get_connection
 from models.user_model import User, Customer, Admin
 
 class UserRepository:
     
-    # Add New User
     @staticmethod
-    def add_user(username, email, password, role="customer", mobile="", specific_info={}):
+    def _map_row_to_object(row):
+        if not row:
+            return None
+        
+        u_id = row['id']
+        name = row['username']
+        email = row['email']
+        pw = row['password_hash']
+        role = row['role']
+        mob = row['mobile']
+        info = row['specific_info']
+
+
+        if role == 'admin':
+            return Admin(u_id, name, email, pw, mob, info)
+        elif role == 'customer':
+            return Customer(u_id, name, email, pw, mob, info)
+        else:
+            return User(u_id, name, email, pw, role, mob)
+
+
+    @staticmethod
+    def add_user(user_object):
         conn = None
         try:
             conn = get_connection()
             cursor = conn.cursor()
             
-            # 1. Hash the password (Security best practice)
-            hashed_pw = generate_password_hash(password)
+            info_dict = {}
+            
+            if isinstance(user_object, Customer):
+                info_dict = {
+                    'address': user_object.address,
+                    'loyalty_points': getattr(user_object, 'loyalty_points', 0)
+                }
+            elif isinstance(user_object, Admin):
+                info_dict = {
+                    'department': user_object.department
+                }
+            
+            info_json = json.dumps(info_dict)
 
-            # 2. Convert specific info to JSON string (to store in the TEXT column)
-            info_json = json.dumps(specific_info)
-
-            # 3. SQL Insert Statement (Using ? placeholders for security)
             sql = """
             INSERT INTO users (username, email, password_hash, role, mobile, specific_info)
             VALUES (?, ?, ?, ?, ?, ?)
             """
             
-            cursor.execute(sql, (username, email, hashed_pw, role, mobile, info_json))
+            cursor.execute(sql, (
+                user_object.username,
+                user_object.email,
+                user_object.get_password_hash(), 
+                user_object.role,
+                user_object.mobile,
+                info_json
+            ))
+            
             conn.commit()
-            print(f"✅ User '{username}' added successfully.")
+            print(f"✅ User '{user_object.username}' added successfully.")
             return True
             
         except sqlite3.IntegrityError:
-            # Handles duplicate Username or Email errors
-            print(f"⚠️ Error: User '{username}' or Email '{email}' already exists.")
+            print(f"⚠️ Error: User '{user_object.username}' or Email already exists.")
             return False
         except Exception as e:
             print(f"❌ Error adding user: {e}")
@@ -43,10 +77,9 @@ class UserRepository:
             if conn:
                 conn.close()
 
-    # Get User Details Using their Email
+
     @staticmethod
     def get_user_by_email(email):
-        # Function used during Login to fetch user details by email.
         conn = None
         try:
             conn = get_connection()
@@ -54,8 +87,8 @@ class UserRepository:
             
             sql = "SELECT * FROM users WHERE email = ?"
             cursor.execute(sql, (email,))
-            user = cursor.fetchone() # Fetch the first matching record
-            return UserRepository._map_row_to_object_(user)
+            user = cursor.fetchone()
+            return UserRepository._map_row_to_object(user)
         except Exception as e:
             print(f"❌ Error fetching user: {e}")
             return None
@@ -63,10 +96,8 @@ class UserRepository:
             if conn:
                 conn.close()
 
-    # Get User Details Using their Username
     @staticmethod
     def get_user_by_username(username):
-        # Function used during Login to fetch user details by email.
         conn = None
         try:
             conn = get_connection()
@@ -74,8 +105,8 @@ class UserRepository:
             
             sql = "SELECT * FROM users WHERE username = ?"
             cursor.execute(sql, (username,))
-            user = cursor.fetchone() # Fetch the first matching record
-            return UserRepository._map_row_to_object_(user)
+            user = cursor.fetchone()
+            return UserRepository._map_row_to_object(user)
         except Exception as e:
             print(f"❌ Error fetching user: {e}")
             return None
@@ -83,7 +114,7 @@ class UserRepository:
             if conn:
                 conn.close()
 
-    # Updating User Details
+
     @staticmethod
     def update_user(user_id, username=None, email=None, password=None, mobile=None, specific_info=None):
         conn = None
@@ -137,8 +168,6 @@ class UserRepository:
             if conn:
                 conn.close()
     
-
-    # Deleting User
     @staticmethod
     def delete_user(user_id):
         conn = None
@@ -163,21 +192,3 @@ class UserRepository:
         finally:
             if conn:
                 conn.close()
-    
-    @staticmethod
-    def _map_row_to_object_(row):
-        if not row:
-            return None
-        u_id = row['id']
-        name = row['username']
-        email = row['email']
-        pw = row['password_hash']
-        role = row['role']
-        mob = row['mobile']
-        info = row['specific_info']
-        if role == 'admin':
-            return Admin(u_id, name, email, pw, role, mob, info)
-        elif role == 'customer':
-            return Customer(u_id, name, email, pw, role, mob, info)
-        else:
-            return User(u_id, name, email, pw, role, mob)
