@@ -2,7 +2,7 @@ import sqlite3
 import json
 from werkzeug.security import generate_password_hash
 # Import the connection function from the db_manager file in the same directory
-from ..db_manager import get_connection 
+from Database.db_manager import get_connection
 
 class UserRepository:
     
