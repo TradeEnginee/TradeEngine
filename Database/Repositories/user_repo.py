@@ -55,7 +55,7 @@ class UserRepository:
             sql = "SELECT * FROM users WHERE email = ?"
             cursor.execute(sql, (email,))
             user = cursor.fetchone() # Fetch the first matching record
-            return user
+            return UserRepository._map_row_to_object_(user)
         except Exception as e:
             print(f"❌ Error fetching user: {e}")
             return None
@@ -75,7 +75,7 @@ class UserRepository:
             sql = "SELECT * FROM users WHERE username = ?"
             cursor.execute(sql, (username,))
             user = cursor.fetchone() # Fetch the first matching record
-            return user
+            return UserRepository._map_row_to_object_(user)
         except Exception as e:
             print(f"❌ Error fetching user: {e}")
             return None
