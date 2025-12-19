@@ -1,52 +1,37 @@
-from extensions import db, login_manager
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
+import json
 
+class User:
+    def __init__(self, id, username, email, password_hash, role, mobile):
+        self.id = id
+        self.username = username
+        self.email = email
+        self.password_hash = password_hash
+        self.role = role
+        self.mobile = mobile
 
-class User(db.Model, UserMixin):
-    __tablename__ = 'users'
+    def get_id(self):
+        return str(self.id)
     
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(150), nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    
-    type = db.Column(db.String(50))
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'user',
-        'polymorphic_on': type
-    }
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
+    def is_admin(self):
+        return False
 
 class Customer(User):
-    __tablename__ = 'customers'
-    
-    id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    
-    address = db.Column(db.String(200))
+    def __init__(self, id, username, email, password_hash, role, mobile, specific_info_json):
+        super().__init__(id, username, email, password_hash, role, mobile)
+        
+        info = json.loads(specific_info_json) if specific_info_json else {}
+        self.address = info.get('address', 'No Address')
 
-    __mapper_args__ = {
-        'polymorphic_identity': 'customer',
-    }
-
+    def can_buy(self):
+        return True
 
 class Admin(User):
-    __tablename__ = 'admins'
-    id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    
-    department = db.Column(db.String(100))
+    def __init__(self, id, username, email, password_hash, role, mobile, specific_info_json):
+        super().__init__(id, username, email, password_hash, role, mobile)
+        
+        info = json.loads(specific_info_json) if specific_info_json else {}
+        self.department = info.get('department', 'General')
 
-    __mapper_args__ = {
-        'polymorphic_identity': 'admin',
-    }
+    # Override
+    def is_admin(self):
+        return True
