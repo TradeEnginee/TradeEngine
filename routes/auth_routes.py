@@ -1,51 +1,68 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from extensions import db
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from Database.Repositories.user_repo import UserRepository
 from models.user_model import Customer, User
-from flask_login import login_user, logout_user, login_required
 
 auth_bp = Blueprint('auth', __name__)
+
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        user_exists = User.query.filter_by(email=email).first()
-        if user_exists:
-            flash('Email already exists!')
-            return redirect(url_for('auth.register'))
-        
-        new_customer = Customer(name=name, email=email)
-        new_customer.set_password(password)
-        
-        db.session.add(new_customer)
-        db.session.commit()
-        
-        flash('Account Created! Please Login.')
-        return redirect(url_for('auth.login'))
-        
+        try:
+            username = request.form['username']
+            email = request.form['email']
+            password = request.form['password']
+            mobile = request.form['mobile']
+            
+
+            new_customer = Customer(None, username, email, None, mobile, "{}")
+            
+
+            new_customer.password = password
+            
+
+            if UserRepository.add_user(new_customer):
+                flash("Account created successfully! Please login.", "success")
+                return redirect(url_for('auth.login'))
+            else:
+                flash("Error: Username or Email already exists.", "error")
+                
+        except ValueError as e:
+            flash(str(e), "error")
+        except Exception as e:
+            flash(f"An error occurred: {e}", "error")
+            
     return render_template('auth/register.html')
+
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = request.form['email']
+        password = request.form['password']
         
-        user = User.query.filter_by(email=email).first()
+        user = UserRepository.get_user_by_email(email)
         
-        if user and user.check_password(password):
-            login_user(user)
-            return "<h1>Login Successful! (System Working)</h1>"
+
+        if user and user.verify_password(password):
+            
+            session['user_id'] = user.id
+            session['username'] = user.username
+            session['role'] = user.role
+            
+            flash(f"Welcome back, {user.username}!", "success")
+            
+
+            return redirect(url_for('shop.home')) 
+            
         else:
-            flash('Login Failed. Check email or password.')
+            flash("Invalid email or password!", "error")
             
     return render_template('auth/login.html')
 
+
 @auth_bp.route('/logout')
-@login_required
 def logout():
-    logout_user()
-    return "Logged Out Successfully"
+    session.clear()
+    flash("You have been logged out.", "info")
+    return redirect(url_for('auth.login'))
