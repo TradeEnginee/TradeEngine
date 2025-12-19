@@ -54,14 +54,11 @@ class Order:
     def shipping_cost(self) -> float:
         return 70 if self.subtotal < 300 else 0.0
     
-    @property
-    def tax(self) -> float:
-        return round(self.subtotal * 0.08, 2)  # 8% tax
     
     @property
     def total(self) -> float:
-        return round(self.subtotal + self.shipping_cost + self.tax, 2)
-    
+        return round(self.subtotal + self.shipping_cost, 2)
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
@@ -89,7 +86,6 @@ class Order:
             "status": self.status.value,
             "subtotal": self.subtotal,
             "shipping_cost": self.shipping_cost,
-            "tax": self.tax,
             "total": self.total,
             "transaction_id": self.transaction_id,
             "created_at": self.created_at.isoformat(),
