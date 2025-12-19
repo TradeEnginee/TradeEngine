@@ -1,27 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TradeEngine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h2>Login</h2>
 
-    {% with messages = get_flashed_messages() %}
+<div class="container">
+    <h2>👋 Welcome Back</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <ul>
-                {% for message in messages %}
-                <li style="color: red;">{{ message }}</li>
-                {% endfor %}
-            </ul>
+            {% for category, message in messages %}
+                <div class="alert {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <form method="POST">
-        <input type="email" name="email" placeholder="Email" required><br><br>
-        <input type="password" name="password" placeholder="Password" required><br><br>
+    <form method="POST" action="{{ url_for('auth.login') }}">
+        <input type="email" name="email" placeholder="Email Address" required>
+        <input type="password" name="password" placeholder="Password" required>
         <button type="submit">Login</button>
     </form>
-    
-    <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a></p>
+
+    <div class="link">
+        Don't have an account? <a href="{{ url_for('auth.register') }}">Create one</a>
+    </div>
+</div>
+
 </body>
 </html>
