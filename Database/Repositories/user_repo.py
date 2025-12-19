@@ -3,6 +3,7 @@ import json
 from werkzeug.security import generate_password_hash
 # Import the connection function from the db_manager file in the same directory
 from Database.db_manager import get_connection
+from models.user_model import User, Customer, Admin
 
 class UserRepository:
     
@@ -162,3 +163,21 @@ class UserRepository:
         finally:
             if conn:
                 conn.close()
+    
+    @staticmethod
+    def _map_row_to_object_(row):
+        if not row:
+            return None
+        u_id = row['id']
+        name = row['username']
+        email = row['email']
+        pw = row['password_hash']
+        role = row['role']
+        mob = row['mobile']
+        info = row['specific_info']
+        if role == 'admin':
+            return Admin(u_id, name, email, pw, role, mob, info)
+        elif role == 'customer':
+            return Customer(u_id, name, email, pw, role, mob, info)
+        else:
+            return User(u_id, name, email, pw, role, mob)
