@@ -28,7 +28,11 @@ class PaymentProcessor(ABC):
     def get_payment_method_name(self) -> str:
         """Return the name of the payment method"""
         pass
+<<<<<<< HEAD
 
+=======
+    ##dd
+>>>>>>> c40f5b9 (- Modified to use SQLite database with JSON shipping address)
 class CreditCardStrategy(PaymentProcessor):
     """Concrete strategy for credit card payments"""
     
