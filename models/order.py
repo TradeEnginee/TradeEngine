@@ -1,4 +1,6 @@
 # models/order.py
+import json
+from dataclasses import asdict
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
@@ -22,6 +24,15 @@ class ShippingAddress:
     postal_code: str
     country: str
     phone: str
+    def to_json(self) -> str:
+        """Serialize to JSON string for database storage"""
+        return json.dumps(asdict(self))
+    
+    @classmethod
+    def from_json(cls, json_str: str) -> 'ShippingAddress':
+        """Deserialize from JSON string"""
+        data = json.loads(json_str)
+        return cls(**data)
 
 @dataclass
 class OrderItem:
