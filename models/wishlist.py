@@ -11,7 +11,6 @@ class Wishlist:
     for product in self.products:
       if product.id != product_id:
         new_products.append(product)
-
     self.products = new_products
 
   def move_to_cart(self, product_id, cart):
@@ -20,3 +19,18 @@ class Wishlist:
         cart.add_product(product)
         self.remove_product(product_id)
         break
+    
+  def move_all_to_cart(self, cart):
+    for product in self.products[:]:
+      self.move_to_cart(product.id, cart)
+
+  def clear_wishlist(self):
+    self.products.clear()
+    
+  @property
+  def items_count(self):
+    return len(self.products)
+
+  @property
+  def is_empty(self):
+    return len(self.products) == 0

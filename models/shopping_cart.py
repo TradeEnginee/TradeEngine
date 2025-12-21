@@ -26,13 +26,27 @@ class ShoppingCart:
         else:
           self.remove_product(product_id)
         break
+    
+  def clear_cart(self):
+    self.items.clear()
+
+  @property
+  def items_count(self):
+    return len(self.items)
+
+  @property
+  def total_quantity(self):
+    total = 0
+    for item in self.items:
+        total += item.quantity
+    return total
+
+  @property
+  def is_empty(self):
+    return len(self.items) == 0
 
   def calculate_subtotal(self):
     subtotal = 0
     for item in self.items:
       subtotal += item.item_total_price()
     return subtotal
-
-  def calculate_total(self):
-    tax = self.calculate_subtotal() * 0.14
-    return self.calculate_subtotal() + tax
