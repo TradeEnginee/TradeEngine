@@ -1,5 +1,5 @@
 import sqlite3
-from ..db_manager import get_connection
+from Database.db_manager import get_connection
 
 class ReviewRepository:
     
