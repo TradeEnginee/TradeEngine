@@ -1,6 +1,16 @@
-class CartItem:
-  def __init__(self, product, quantity=1):
-    self.product = product
+from extensions import db
+
+class CartItem(db.Model):
+  __tablename__ = 'cart_items' 
+  id = db.Column(db.Integer, primary_key=True)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+  _quantity = db.Column('quantity', db.Integer, db.CheckConstraint('quantity > 0'), default=1)
+  product = db.relationship("Product")
+
+  def __init__(self, user_id, product_id, quantity=1):
+    self.user_id = user_id
+    self.product_id = product_id
     self._quantity = quantity
 
   @property
