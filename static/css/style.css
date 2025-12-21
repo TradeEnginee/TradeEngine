@@ -1,0 +1,119 @@
+/* استيراد خط Poppins من جوجل */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+/* الأساسيات */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* خلفية متدرجة */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* الكارت الأبيض */
+.container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.container:hover {
+    transform: translateY(-5px); /* حركة بسيطة لما الماوس ييجي عليه */
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* حقول الإدخال */
+input {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 10px 0;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    outline: none;
+}
+
+input:focus {
+    border-color: #667eea; /* لون البوردر يتغير لما تكتب */
+}
+
+/* الزرار */
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* الروابط */
+.link {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.link a {
+    color: #764ba2;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.link a:hover {
+    text-decoration: underline;
+}
+
+/* رسائل التنبيه (Alerts) */
+.alert {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: left;
+}
+
+.alert.error {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border-left: 5px solid #b91c1c;
+}
+
+.alert.success {
+    background-color: #d1fae5;
+    color: #047857;
+    border-left: 5px solid #047857;
+}
+
+.alert.info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border-left: 5px solid #0369a1;
+}

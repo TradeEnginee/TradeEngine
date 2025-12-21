@@ -1,5 +1,5 @@
 import sqlite3
-from ..db_manager import get_connection
+from Database.db_manager import get_connection
 import json
 allowed_columns = ["price", "name", "created_at", "stock_quantity"]
 sort_types = ["ASC", "DESC"]
