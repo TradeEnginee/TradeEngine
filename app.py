@@ -1,6 +1,7 @@
 from flask import Flask
 from Database.db_manager import init_schema
-from routes.auth_routes import auth_bp 
+from routes.auth_routes import auth_bp
+from routes.product_route import shop_bp
 
 
 app = Flask(__name__)
@@ -12,6 +13,7 @@ init_schema()
 
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(shop_bp)
 
 
 
