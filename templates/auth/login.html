@@ -1,36 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - TradeEngine</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "layout_auth.html" %}
 
-<div class="container">
-    <h2>👋 Welcome Back</h2>
+{% block content %}
+<div class="auth-box">
+    <h2>Login</h2>
+    
+    <form action="{{ url_for('auth.login') }}" method="POST">
+        
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" 
+                   name="email" 
+                   class="form-control" 
+                   placeholder="Enter your email" 
+                   required>
+        </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert {{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" 
+                   name="password" 
+                   class="form-control" 
+                   placeholder="Enter your password" 
+                   required>
+        </div>
 
-    <form method="POST" action="{{ url_for('auth.login') }}">
-        <input type="email" name="email" placeholder="Email Address" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
+        <button type="submit" class="login-btn btn-block">Login</button>
     </form>
 
-    <div class="link">
-        Don't have an account? <a href="{{ url_for('auth.register') }}">Create one</a>
-    </div>
+    <p style="text-align: center; margin-top: 20px; font-size: 14px;">
+        New here? 
+        <a href="{{ url_for('auth.register') }}" style="color: var(--secondary-color); font-weight: bold; text-decoration: underline;">Create Account</a>
+    </p>
 </div>
-
-</body>
-</html>
+{% endblock %}
