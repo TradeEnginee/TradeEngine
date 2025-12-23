@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeEngine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="{{ url_for('shop.home') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TradeEngine">
+            </a>
+        </div>
+
+        <div class="nav-center">
+            <form action="{{ url_for('shop.home') }}" method="GET" class="search-form">
+                <input type="text" name="search" placeholder="Search for machines..." required>
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </form>
+        </div>
+
+        <div class="nav-right">
+            <a href="#" class="nav-icon" title="Wishlist">
+                <i class="fa-regular fa-heart"></i>
+            </a>
+
+            <a href="#" class="nav-icon cart-icon" title="Cart">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span class="cart-count">{{ session.get('cart', {}) | length }}</span>
+            </a>
+
+            {% if session.get('user_id') %}
+                <div class="user-dropdown">
+                    <a href="#" class="nav-icon profile-icon">
+                        <i class="fa-regular fa-user"></i>
+                    </a>
+                    <div class="dropdown-content">
+                        <div class="dropdown-header">
+                            Welcome, <b>{{ session.get('username') }}</b>
+                        </div>
+                        <a href="#"><i class="fa-solid fa-box-open"></i> My Orders</a>
+                        <a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="logout-link">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="login-btn">Login</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container-main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-msg flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>
