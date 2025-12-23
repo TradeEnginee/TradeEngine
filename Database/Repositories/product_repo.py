@@ -12,6 +12,8 @@ class ProductRepository:
     # =========================================================
     # Helper: Convert a Row into an Object
     # =========================================================
+
+    # testing comment
     @staticmethod
     def _map_row_to_object(row):
         if not row:
