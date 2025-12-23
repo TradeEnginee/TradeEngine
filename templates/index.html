@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    {% for category, products in categorized_products.items() %}
+        <div class="category-section" style="margin-bottom: 60px;">
+            <h2 style="color: var(--primary-color); border-left: 5px solid var(--secondary-color); padding-left: 15px; margin-bottom: 25px; font-size: 24px;">
+                {{ category }}
+            </h2>
+            
+            <div class="products-grid">
+                {% for product in products %}
+                    <div class="product-card">
+                        <img src="{{ product.image_url or 'https://via.placeholder.com/300x250?text=No+Image' }}" class="product-img" alt="{{ product.name }}">
+                        <div class="product-body">
+                            <div class="product-title">{{ product.name }}</div>
+                            <div class="product-brand">
+                                {{ product.details.get('brand') or product.details.get('Brand') or 'General' }}
+                            </div>
+                            
+                            <div class="product-footer">
+                                <div class="product-price">{{ product.get_display_price() }}</div>
+                                <a href="{{ url_for('shop.add_to_cart', product_id=product.id) }}" class="btn-add">Add +</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div style="text-align: center; margin-top: 80px; color: #777;">
+            <i class="fa-solid fa-magnifying-glass" style="font-size: 50px; color: var(--accent-color); margin-bottom: 20px;"></i>
+            <h3>No products found.</h3>
+            <p>Try searching for something else!</p>
+        </div>
+    {% endfor %}
+
+{% endblock %}
