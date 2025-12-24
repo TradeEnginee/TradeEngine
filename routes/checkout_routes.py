@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 from models.order import Order, ShippingAddress, OrderItem
 from models.payment_processor import PaymentProcessor, CreditCardStrategy, CashOnDeliveryStrategy, PaymentContext
+from Database.Repositories.order_repo import OrderRepository
 from Database.db_manager import get_connection
 
 checkout_bp = Blueprint('checkout', __name__)
@@ -77,35 +78,31 @@ def create_order():
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     
-    # Save order to database
-    conn = get_connection()
-    cursor = conn.cursor()
-    
+    # Save order to database using Repository Pattern
     try:
-        # Insert order with JSON shipping address
-        # Corrected column name: total_price -> total_amount to match schema
-        cursor.execute("""
-            INSERT INTO orders (user_id, shipping_address, payment_method, total_amount, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            data['user_id'],
-            shipping.to_json(),  # Store as JSON string
-            payment_method,
-            total_price,
-            'confirmed' if payment_result.success else 'pending',
-            datetime.now().isoformat()
-        ))
+        # Prepare items for repository (needs list of dicts with 'product_id', 'quantity', 'price')
+        repo_items = [
+            {
+                'product_id': item.product_id,
+                'quantity': item.quantity,
+                'price': item.unit_price
+            }
+            for item in items
+        ]
         
-        order_id = cursor.lastrowid
+        status = 'confirmed' if payment_result.success else 'pending'
         
-        # Insert order items
-        for item in items:
-            cursor.execute("""
-                INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase)
-                VALUES (?, ?, ?, ?)
-            """, (order_id, item.product_id, item.quantity, item.unit_price))
+        order_id = OrderRepository.create_order(
+            user_id=data['user_id'],
+            cart_items=repo_items,
+            total_amount=total_price,
+            shipping_address=shipping.to_json(),
+            payment_method=payment_method,
+            status=status
+        )
         
-        conn.commit()
+        if not order_id:
+            return jsonify({'error': 'Failed to create order in database'}), 500
         
         # Create response dictionary from PaymentResult
         payment_response = {
@@ -119,15 +116,12 @@ def create_order():
             'success': True,
             'order_id': order_id,
             'total': total_price,
-            'status': 'confirmed',
+            'status': status,
             'payment': payment_response
         }), 201
         
     except Exception as e:
-        conn.rollback()
         return jsonify({'error': f'Database error: {str(e)}'}), 500
-    finally:
-        conn.close()
 
 
 @checkout_bp.route('/orders/<int:order_id>', methods=['GET'])
