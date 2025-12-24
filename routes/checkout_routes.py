@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 import json
 from datetime import datetime
 from models.order import Order, ShippingAddress, OrderItem
-from models.payment_processor import PaymentProcessor, CreditCardStrategy, CashOnDeliveryStrategy
+from models.payment_processor import PaymentProcessor, CreditCardStrategy, CashOnDeliveryStrategy, PaymentContext
 from Database.db_manager import get_connection
 
 checkout_bp = Blueprint('checkout', __name__)
@@ -41,6 +41,7 @@ def create_order():
         address_line1=shipping_data.get('address_line1', ''),
         address_line2=shipping_data.get('address_line2', ''),
         city=shipping_data.get('city', ''),
+        state=shipping_data.get('state', ''), # Added state handling
         postal_code=shipping_data.get('postal_code', ''),
         country=shipping_data.get('country', ''),
         phone=shipping_data.get('phone', '')
@@ -65,11 +66,13 @@ def create_order():
     
     try:
         strategy = get_payment_strategy(payment_method, payment_details)
-        processor = PaymentProcessor(strategy)
-        payment_result = processor.process(total_price)
+        # Use PaymentContext appropriately
+        processor = PaymentContext(strategy)
+        # process_payment requires amount and payment_data
+        payment_result = processor.process_payment(total_price, payment_details)
         
-        if not payment_result['success']:
-            return jsonify({'error': 'Payment failed', 'details': payment_result}), 400
+        if not payment_result.success: # PaymentResult object, not dict
+            return jsonify({'error': 'Payment failed', 'details': payment_result.message}), 400
             
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
@@ -80,15 +83,16 @@ def create_order():
     
     try:
         # Insert order with JSON shipping address
+        # Corrected column name: total_price -> total_amount to match schema
         cursor.execute("""
-            INSERT INTO orders (user_id, shipping_address, payment_method, total_price, status, created_at)
+            INSERT INTO orders (user_id, shipping_address, payment_method, total_amount, status, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (
             data['user_id'],
             shipping.to_json(),  # Store as JSON string
             payment_method,
             total_price,
-            'confirmed' if payment_result['success'] else 'pending',
+            'confirmed' if payment_result.success else 'pending',
             datetime.now().isoformat()
         ))
         
@@ -103,12 +107,20 @@ def create_order():
         
         conn.commit()
         
+        # Create response dictionary from PaymentResult
+        payment_response = {
+            'success': payment_result.success,
+            'transaction_id': payment_result.transaction_id,
+            'message': payment_result.message,
+            'data': payment_result.data
+        }
+
         return jsonify({
             'success': True,
             'order_id': order_id,
             'total': total_price,
             'status': 'confirmed',
-            'payment': payment_result
+            'payment': payment_response
         }), 201
         
     except Exception as e:
