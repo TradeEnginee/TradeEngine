@@ -13,11 +13,7 @@ checkout_bp = Blueprint('checkout', __name__)
 # Payment strategy factory
 def get_payment_strategy(method: str, details: dict = None):
     if method == 'credit_card':
-        return CreditCardStrategy(
-            card_number=details.get('card_number', ''),
-            expiry=details.get('expiry', ''),
-            cvv=details.get('cvv', '')
-        )
+        return CreditCardStrategy()
     elif method == 'cod':
         return CashOnDeliveryStrategy()
     else:
