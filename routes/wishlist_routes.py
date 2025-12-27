@@ -1,69 +1,55 @@
-from flask import Blueprint, jsonify, request
-from flask_login import login_required, current_user
-from models.wishlist import Wishlist
+from flask import Blueprint, render_template, session, request, redirect, url_for, flash
+from Database.Repositories.wishlist_repo import WishlistRepository
+from Database.Repositories.cart_repo import CartRepository
+from Database.Repositories.user_repo import UserRepository
 
-wishlist_bp = Blueprint("wishlist", __name__)
+wishlist_bp = Blueprint('wishlist', __name__)
 
-@wishlist_bp.route("/wishlist", methods=["GET"])
-@login_required
+@wishlist_bp.route('/wishlist')
 def view_wishlist():
-    wishlist = Wishlist(current_user.id)
-    products = []
-    for item in wishlist.items:
-        products.append({
-            "id": item.product.id,
-            "name": item.product.name,
-            "price": item.product.price,
-            "image": item.product.image_url
-        })
-        
-    return jsonify({
-        "items": products,
-        "items_count": wishlist.items_count
-    }), 200
+    if 'user_id' not in session:
+        flash("Please login to view your wishlist.", "error")
+        return redirect(url_for('auth.login'))
 
-@wishlist_bp.route("/wishlist/add/<int:product_id>", methods=["POST"])
-@login_required
+    user_id = session.get('user_id')
+    user = UserRepository.get_user_by_id(user_id)
+    wishlist = WishlistRepository.get_wishlist_by_user(user)
+    return render_template('wishlist.html', wishlist=wishlist)
+
+@wishlist_bp.route('/wishlist/add/<int:product_id>')
 def add_to_wishlist(product_id):
-    wishlist = Wishlist(current_user.id)
-    success, message = wishlist.add_product(product_id)
-    if success:
-        return jsonify({"message": message}), 200
-    else:
-        return jsonify({"message": message}), 200
+    if 'user_id' not in session:
+        flash("Please login to add items to wishlist.", "error")
+        return redirect(url_for('auth.login'))
 
-@wishlist_bp.route("/wishlist/remove/<int:product_id>", methods=["DELETE"])
-@login_required
+    user_id = session.get('user_id')    
+    if WishlistRepository.add_item(user_id, product_id):
+        flash("Product added to wishlist!", "success")
+    else:
+        flash("Product is already in your wishlist.", "info")       
+    return redirect(request.referrer or url_for('wishlist.view_wishlist'))
+
+@wishlist_bp.route('/wishlist/remove/<int:product_id>')
 def remove_from_wishlist(product_id):
-    wishlist = Wishlist(current_user.id)
-    wishlist.remove_product(product_id)
-    return jsonify({"message": "Product removed from wishlist"}), 200
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('auth.login'))
 
-@wishlist_bp.route("/wishlist/move-to-cart/<int:product_id>", methods=["POST"])
-@login_required
-def move_to_cart(product_id):
-    wishlist = Wishlist(current_user.id)
-    # The wishlist model handles the ShoppingCart and Stock check internally
-    success, message = wishlist.move_to_cart(product_id)
-    if success:
-        return jsonify({"message": message}), 200
+    if WishlistRepository.remove_item(user_id, product_id):
+        flash("Item removed from wishlist.", "success")
     else:
-        # Returns an error if the item is Out of Stock
-        return jsonify({"error": message}), 400
+        flash("Error removing item.", "error")
+    return redirect(url_for('wishlist.view_wishlist'))
 
-@wishlist_bp.route("/wishlist/move-all", methods=["POST"])
-@login_required
-def move_all_to_cart():
-    wishlist = Wishlist(current_user.id)
-    results = wishlist.move_all_to_cart()
-    return jsonify({
-        "message": "Bulk move processed",
-        "details": results
-    }), 200
+@wishlist_bp.route('/wishlist/move-to-cart/<int:product_id>')
+def move_to_cart(product_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('auth.login'))
 
-@wishlist_bp.route("/wishlist/clear", methods=["DELETE"])
-@login_required
-def clear_wishlist():
-    wishlist = Wishlist(current_user.id)
-    wishlist.clear_wishlist()
-    return jsonify({"message": "Wishlist cleared"}), 200
+    if CartRepository.add_or_update_item(user_id, product_id, 1):
+        WishlistRepository.remove_item(user_id, product_id)
+        flash("Item moved to your shopping cart!", "success")
+    else:
+        flash("Failed to move item to cart.", "error")
+    return redirect(url_for('wishlist.view_wishlist'))
