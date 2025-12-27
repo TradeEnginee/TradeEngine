@@ -1,12 +1,23 @@
-from extensions import db
+class WishlistItem:
+    def __init__(self, item_id, user, product):
+        self._item_id = item_id
+        self._user = user
+        self._product = product
 
-class WishlistItem(db.Model):
-    __tablename__ = 'wishlist_items'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    product = db.relationship("Product")
+    @property
+    def product(self):
+        return self._product
 
-    def __init__(self, user_id, product_id):
-        self.user_id = user_id
-        self.product_id = product_id
+    @property
+    def user(self):
+        return self._user
+
+    def to_dict(self):
+        return {
+            "item_id": self._item_id,
+            "product_name": self._product.name,
+            "product_price": self._product.price
+        }
+
+    def __repr__(self):
+        return f"<WishlistItem: {self._product.name}>"
