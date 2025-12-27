@@ -1,43 +1,60 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, render_template, session, request, redirect, url_for, flash
+from Database.Repositories.cart_repo import CartRepository
 from Database.Repositories.product_repo import ProductRepository
-from models.shopping_cart import ShoppingCart
-from models.cart_item import CartItem
+from Database.Repositories.user_repo import UserRepository
 
-cart_bp = Blueprint("cart", __name__)
+cart_bp = Blueprint('cart', __name__)
 
-@cart_bp.route("/cart", methods=["GET"])
-@login_required
+@cart_bp.route('/cart')
 def view_cart():
-    cart = ShoppingCart(current_user.id)
-    items = []
-    for item in CartItem.query.filter_by(user_id=current_user.id).all():
-        items.append({
-            "id": item.product.id,
-            "name": item.product.name,
-            "price": item.product.price,
-            "quantity": item.quantity,
-            "total": item.item_total_price()
-        })
-        
-    return jsonify({
-        "items": items,
-        "subtotal": cart.calculate_subtotal(),
-        "total_quantity": cart.total_quantity
-    }), 200
+    if 'user_id' not in session:
+        flash("Please login to view your cart.", "error")
+        return redirect(url_for('auth.login'))
 
-@cart_bp.route("/cart/add/<int:product_id>", methods=["POST"])
-@login_required
+    user_id = session.get('user_id')
+    user = UserRepository.get_user_by_id(user_id)
+    cart = CartRepository.get_cart_by_user(user)
+    return render_template('cart.html', cart=cart)
+
+@cart_bp.route('/cart/add/<int:product_id>')
 def add_to_cart(product_id):
-    cart = ShoppingCart(current_user.id)
-    success, message = cart.add_product(product_id)
-    if success:
-        return jsonify({"message": message}), 200
-    else:
-        return jsonify({"error": message}), 400
+    if 'user_id' not in session:
+        flash("Please login to add items to cart.", "error")
+        return redirect(url_for('auth.login'))
 
-@cart_bp.route("/cart/clear", methods=["DELETE"])
-@login_required
-def clear_cart_route():
-    cart = ShoppingCart(current_user.id)
-    cart.clear_cart()
-    return jsonify({"message": "Cart cleared successfully"}), 200
+    user_id = session.get('user_id')
+    user = UserRepository.get_user_by_id(user_id)
+    product = ProductRepository.get_product_by_id(product_id)
+    
+    if not product:
+        flash("Product not found.", "error")
+        return redirect(url_for('shop.home'))
+
+    cart = CartRepository.get_cart_by_user(user)  
+    success, message = cart.add_product(product, quantity=1)
+    
+    if success:
+        CartRepository.add_or_update_item(user_id, product_id, 1)
+        flash(message, "success")
+    else:
+        flash(message, "error")
+    return redirect(request.referrer or url_for('cart.view_cart'))
+
+@cart_bp.route('/cart/remove/<int:product_id>')
+def remove_from_cart(product_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('auth.login'))
+
+    if CartRepository.remove_item(user_id, product_id):
+        flash("Item removed from cart.", "success")
+    else:
+        flash("Failed to remove item.", "error")
+    return redirect(url_for('cart.view_cart'))
+
+@cart_bp.route('/cart/clear')
+def clear_cart():
+    user_id = session.get('user_id')
+    if user_id and CartRepository.clear_cart(user_id):
+        flash("Cart cleared.", "success")
+    return redirect(url_for('cart.view_cart'))
