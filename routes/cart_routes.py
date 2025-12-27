@@ -1,5 +1,9 @@
 from flask import Blueprint, render_template, session, request, redirect, url_for, flash
 from Database.Repositories.cart_repo import CartRepository
+<<<<<<< HEAD
+=======
+from Database.Repositories.product_repo import ProductRepository
+>>>>>>> b9f3f9c7eb622c4e77601ff7e6b5b4151f38327d
 from Database.Repositories.user_repo import UserRepository
 
 cart_bp = Blueprint('cart', __name__)
@@ -22,12 +26,30 @@ def add_to_cart(product_id):
         return redirect(url_for('auth.login'))
 
     user_id = session.get('user_id')
+<<<<<<< HEAD
     
     if CartRepository.add_or_update_item(user_id, product_id, 1):
         flash("Product added to cart!", "success")
     else:
         flash("Could not add product. Please try again.", "error")
         
+=======
+    user = UserRepository.get_user_by_id(user_id)
+    product = ProductRepository.get_product_by_id(product_id)
+    
+    if not product:
+        flash("Product not found.", "error")
+        return redirect(url_for('shop.home'))
+
+    cart = CartRepository.get_cart_by_user(user)  
+    success, message = cart.add_product(product, quantity=1)
+    
+    if success:
+        CartRepository.add_or_update_item(user_id, product_id, 1)
+        flash(message, "success")
+    else:
+        flash(message, "error")
+>>>>>>> b9f3f9c7eb622c4e77601ff7e6b5b4151f38327d
     return redirect(request.referrer or url_for('cart.view_cart'))
 
 @cart_bp.route('/cart/remove/<int:product_id>')
