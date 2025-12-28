@@ -11,8 +11,8 @@ def view_wishlist():
         flash("Please login to view your wishlist.", "error")
         return redirect(url_for('auth.login'))
 
-    user_id = session.get('user_id')
-    user = UserRepository.get_user_by_id(user_id)
+    user = session.get('username')
+    user = UserRepository.get_user_by_username(user)
     wishlist = WishlistRepository.get_wishlist_by_user(user)
     return render_template('wishlist.html', wishlist=wishlist)
 

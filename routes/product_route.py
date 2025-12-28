@@ -3,6 +3,8 @@ from Database.Repositories.product_repo import ProductRepository
 from Database.Repositories.review_repo import ReviewRepository
 from flask import abort
 review_repo = ReviewRepository()
+from Database.Repositories.order_repo import OrderRepository
+import json
 
 shop_bp = Blueprint('shop', __name__)
 
@@ -69,3 +71,40 @@ def product_detail(product_id):
         avg_rating=avg_rating,
         reviews_count=reviews_count
     )
+# ==========================================
+# My Orders Page
+# ==========================================
+@shop_bp.route('/my-orders')
+def my_orders():
+    if 'user_id' not in session:
+        flash("Please login to view your orders.", "warning")
+        return redirect(url_for('auth.login'))
+    
+    user_id = session['user_id']
+    
+    raw_orders = OrderRepository.get_user_orders(user_id) 
+    
+    orders_data = []
+    
+    for row in raw_orders:
+        order_id = row['id']
+        
+        try:
+            shipping_info = json.loads(row['shipping_address'])
+        except:
+            shipping_info = {}
+            
+
+        items = OrderRepository.get_order_details(order_id)
+        
+        orders_data.append({
+            'id': order_id,
+            'date': row['created_at'],
+            'status': row['status'],
+            'total': row['total_amount'],
+            'payment': row['payment_method'],
+            'shipping': shipping_info,
+            'items': items
+        })
+    
+    return render_template('orders.html', orders=orders_data)

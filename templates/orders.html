@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 40px auto; padding: 0 20px;">
+    
+    <h2 class="section-title" style="border-left-color: var(--primary-color);">My Order History 📦</h2>
+
+    {% if orders %}
+        <div style="display: flex; flex-direction: column; gap: 30px;">
+            {% for order in orders %}
+            <div style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #eee;">
+                
+                <div style="background: #f8f9fa; padding: 15px 25px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <span style="font-weight: bold; color: var(--primary-color);">Order #{{ order.id }}</span>
+                        <span style="color: #888; font-size: 14px; margin-left: 10px;">Placed on {{ order.date }}</span>
+                    </div>
+                    <div>
+                        {% set status_color = '#f0ad4e' %} {% if order.status == 'confirmed' or order.status == 'Paid' %}
+                            {% set status_color = '#28a745' %} {% elif order.status == 'cancelled' %}
+                            {% set status_color = '#d9534f' %} {% endif %}
+                        
+                        <span style="background: {{ status_color }}; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase;">
+                            {{ order.status }}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="padding: 25px;">
+                    
+                    <div style="display: flex; gap: 40px; margin-bottom: 20px; font-size: 14px; color: #555;">
+                        <div>
+                            <i class="fa-solid fa-location-dot" style="color: var(--secondary-color);"></i> 
+                            <strong>Shipped to:</strong> {{ order.shipping.city }}, {{ order.shipping.address_line1 }}
+                        </div>
+                        <div>
+                            <i class="fa-regular fa-credit-card" style="color: var(--secondary-color);"></i> 
+                            <strong>Payment:</strong> {{ order.payment }}
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+
+                    {% for item in order.items %}
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <img src="{{ item['image_url'] }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; margin-right: 15px;">
+                        
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin: 0; font-size: 16px; color: #333;">{{ item['name'] }}</h4>
+                            <small style="color: #888;">Qty: {{ item['quantity'] }}</small>
+                        </div>
+                        
+                        <div style="font-weight: bold; color: var(--primary-color);">
+                            ${{ "{:,.2f}".format(item['price_at_purchase']) }}
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+                    <div style="text-align: right;">
+                        <span style="font-size: 16px; color: #666;">Total Amount:</span>
+                        <span style="font-size: 24px; font-weight: 800; color: var(--primary-color); margin-left: 10px;">
+                            ${{ "{:,.2f}".format(order.total) }}
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 60px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+            <i class="fa-solid fa-box-open" style="font-size: 60px; color: #ddd; margin-bottom: 20px;"></i>
+            <h3 style="color: #666;">No orders yet</h3>
+            <p style="color: #999; margin-bottom: 30px;">Looks like you haven't bought anything yet.</p>
+            <a href="{{ url_for('shop.home') }}" class="btn-add" style="padding: 10px 25px; text-decoration: none;">Start Shopping</a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
