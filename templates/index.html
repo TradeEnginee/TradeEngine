@@ -3,39 +3,55 @@
 {% block content %}
 
     {% for category, products in categorized_products.items() %}
-        <div class="category-section" style="margin-bottom: 60px;">
-            <h2 style="color: var(--primary-color); border-left: 5px solid var(--secondary-color); padding-left: 15px; margin-bottom: 25px; font-size: 24px;">
-                {{ category }}
-            </h2>
+        
+        <div class="category-section">
+            <h2 class="section-title">{{ category }}</h2>
             
             <div class="products-grid">
                 {% for product in products %}
-                    <div class="product-card">
-                        <img src="{{ product.image_url or 'https://via.placeholder.com/300x250?text=No+Image' }}" class="product-img" alt="{{ product.name }}">
-                        <div class="product-body">
-                            <div class="product-title">{{ product.name }}</div>
-                            <div class="product-brand">
+                    <div class="machine-card">
+                        
+                        <div class="machine-img-container">
+                            <img src="{{ product.image_url }}" 
+                                 class="machine-img" 
+                                 alt="{{ product.name }}"
+                                 onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';">
+                        </div>
+
+                        <div class="machine-body">
+                            <div class="machine-brand">
                                 {{ product.details.get('brand') or product.details.get('Brand') or 'General' }}
                             </div>
                             
-                            <div class="product-footer">
-                                <div class="product-price">{{ product.get_display_price() }}</div>
-                                <div style="display: flex; gap: 10px;">
-                                <a href="{{ url_for('cart.add_to_cart', product_id=product.id) }}" class="btn-add">Add +</a>
-                                <a href="{{ url_for('wishlist.add_to_wishlist', product_id=product.id) }}" style="color: var(--secondary-color); font-size: 20px; align-self: center;">
+                            <h3 class="machine-title">{{ product.name }}</h3>
+                            
+                            <div class="machine-footer">
+                                <div class="price">${{ "{:,.2f}".format(product.price) }}</div>
+
+                                <a href="{{ url_for('wishlist.add_to_wishlist', product_id=product.id) }}" 
+                                   class="btn-wishlist" 
+                                   title="Add to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
+                                </a>
+
+                                <a href="{{ url_for('cart.add_to_cart', product_id=product.id) }}" 
+                                   class="btn-add-cart" 
+                                   title="Add to Cart">
+                                    <i class="fa-solid fa-plus"></i>
                                 </a>
                             </div>
                         </div>
+
                     </div>
                 {% endfor %}
             </div>
         </div>
+
     {% else %}
-        <div style="text-align: center; margin-top: 80px; color: #777;">
-            <i class="fa-solid fa-magnifying-glass" style="font-size: 50px; color: var(--accent-color); margin-bottom: 20px;"></i>
-            <h3>No products found.</h3>
-            <p>Try searching for something else!</p>
+        <div class="no-products">
+            <i class="fa-solid fa-gears"></i>
+            <h3>No Machines Found</h3>
+            <p>We are stocking up our warehouse. Check back soon!</p>
         </div>
     {% endfor %}
 
