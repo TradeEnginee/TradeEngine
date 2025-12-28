@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="category-section" style="max-width: 1000px; margin: 40px auto;">
+    <h2 style="color: var(--primary-color); border-left: 5px solid var(--secondary-color); padding-left: 15px; margin-bottom: 25px;">
+        My Wishlist
+    </h2>
+
+    <div class="products-grid">
+        {% for item in wishlist.items %}
+        <div class="product-card">
+            <img src="{{ item.product.image_url }}" class="product-img" alt="{{ item.product.name }}">
+            <div class="product-body">
+                <div class="product-title">{{ item.product.name }}</div>
+                <div class="product-footer">
+                    <div class="product-price">{{ item.product.get_display_price() }}</div>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{{ url_for('wishlist.move_to_cart', product_id=item.product.id) }}" class="btn-add" title="Move to Cart">
+                            <i class="fa-solid fa-cart-plus"></i>
+                        </a>
+                        <a href="{{ url_for('wishlist.remove_from_wishlist', product_id=item.product.id) }}" style="color: var(--danger-color); padding: 8px;">
+                            <i class="fa-solid fa-xmark"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+            <i class="fa-regular fa-heart" style="font-size: 60px; color: var(--accent-color); margin-bottom: 20px;"></i>
+            <h3>No items in wishlist.</h3>
+            <a href="{{ url_for('shop.home') }}" style="color: var(--secondary-color); font-weight: bold;">Browse Products</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
