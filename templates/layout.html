@@ -24,13 +24,12 @@
         </div>
 
         <div class="nav-right">
-            <a href="#" class="nav-icon" title="Wishlist">
+            <a href="{{ url_for('wishlist.view_wishlist') }}" class="nav-icon" title="Wishlist">
                 <i class="fa-regular fa-heart"></i>
             </a>
 
-            <a href="#" class="nav-icon cart-icon" title="Cart">
+            <a href="{{ url_for('cart.view_cart') }}" class="nav-icon cart-icon" title="Cart">
                 <i class="fa-solid fa-cart-shopping"></i>
-                <span class="cart-count">{{ session.get('cart', {}) | length }}</span>
             </a>
 
             {% if session.get('user_id') %}
