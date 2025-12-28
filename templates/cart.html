@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="category-section" style="max-width: 1000px; margin: 40px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h2 style="color: var(--primary-color); border-left: 5px solid var(--secondary-color); padding-left: 15px; margin-bottom: 25px;">
+        Your Shopping Cart
+    </h2>
+
+    {% if cart.items %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--accent-color); text-align: left; color: var(--secondary-color);">
+                    <th style="padding: 15px;">Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart.items %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 15px; display: flex; align-items: center;">
+                        <img src="{{ item.product.image_url }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 15px;">
+                        <span style="font-weight: 600;">{{ item.product.name }}</span>
+                    </td>
+                    <td>{{ item.product.get_display_price() }}</td>
+                    <td>
+                        <span style="padding: 5px 12px; background: var(--bg-color); border-radius: 5px;">{{ item.quantity }}</span>
+                    </td>
+                    <td style="font-weight: bold; color: var(--primary-color);">{{ item.get_total_price() }} EGP</td>
+                    <td>
+                        <a href="{{ url_for('cart.remove_from_cart', product_id=item.product.id) }}" style="color: var(--danger-color); font-size: 18px;">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; border-top: 2px solid var(--bg-color); padding-top: 20px;">
+        <a href="{{ url_for('cart.clear_cart') }}" style="color: var(--danger-color); font-weight: bold;">Clear All</a>
+        <div style="text-align: right;">
+            <p style="font-size: 18px; margin-bottom: 10px;">Total Amount: <b style="font-size: 24px; color: var(--primary-color);">{{ cart.get_total_price() }} EGP</b></p>
+            <button class="btn-add" style="padding: 12px 30px; font-size: 16px;">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    {% else %}
+    <div style="text-align: center; padding: 50px;">
+        <i class="fa-solid fa-cart-shopping" style="font-size: 60px; color: var(--accent-color); margin-bottom: 20px;"></i>
+        <h3>Your cart is empty!</h3>
+        <p style="margin-bottom: 20px;">Add some items to start shopping.</p>
+        <a href="{{ url_for('shop.home') }}" class="btn-add">Back to Shop</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
