@@ -9,16 +9,16 @@
     <div class="products-grid">
         {% for item in wishlist.items %}
         <div class="product-card">
-            <img src="{{ item.product.image_url }}" class="product-img" alt="{{ item.product.name }}">
-            <div class="product-body">
-                <div class="product-title">{{ item.product.name }}</div>
-                <div class="product-footer">
-                    <div class="product-price">{{ item.product.get_display_price() }}</div>
+            <img src="{{ item.product.image_url }}" class="product-img" alt="{{ item.product.name }}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px;">
+            <div class="product-body" style="padding: 15px;">
+                <div class="product-title" style="font-weight: bold; margin-bottom: 10px;">{{ item.product.name }}</div>
+                <div class="product-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="product-price" style="color: var(--primary-color); font-weight: bold;">{{ item.product.get_display_price() }}</div>
                     <div style="display: flex; gap: 10px;">
-                        <a href="{{ url_for('wishlist.move_to_cart', product_id=item.product.id) }}" class="btn-add" title="Move to Cart">
+                        <a href="{{ url_for('wishlist.move_to_cart', product_id=item.product.id) }}" class="btn-add" title="Move to Cart" style="padding: 8px 12px;">
                             <i class="fa-solid fa-cart-plus"></i>
                         </a>
-                        <a href="{{ url_for('wishlist.remove_from_wishlist', product_id=item.product.id) }}" style="color: var(--danger-color); padding: 8px;">
+                        <a href="{{ url_for('wishlist.remove_from_wishlist', product_id=item.product.id) }}" style="color: var(--danger-color); padding: 8px; border: 1px solid #eee; border-radius: 5px;">
                             <i class="fa-solid fa-xmark"></i>
                         </a>
                     </div>
