@@ -27,8 +27,15 @@
                             
                             <div class="machine-footer">
                                 <div class="price">${{ "{:,.2f}".format(product.price) }}</div>
-                                
-                                <a href="{{ url_for('shop.add_to_cart', product_id=product.id) }}" 
+
+                                <a href="{{ url_for('wishlist.add_to_wishlist', product_id=product.id) }}" 
+                                   class="btn-wishlist" 
+                                   title="Add to Wishlist">
+                                    <i class="fa-regular fa-heart"></i>
+                                </a>
+
+                                <a href="{{ url_for('cart.add_to_cart', product_id=product.id) }}" 
+
                                    class="btn-add-cart" 
                                    title="Add to Cart">
                                     <i class="fa-solid fa-plus"></i>
