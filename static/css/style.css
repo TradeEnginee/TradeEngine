@@ -1,0 +1,158 @@
+/* Poppins font from Google */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+/* Reset & Basics */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* White Card Container */
+.container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 900px; /* Wider for checkout layout */
+    transition: transform 0.3s ease;
+}
+
+h2, h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/* Form Layout Classes */
+.checkout-layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 30px;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .checkout-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Inputs */
+input, select {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 8px 0;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+}
+
+input:focus {
+    border-color: #667eea;
+}
+
+/* Modern Gradient Button */
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: scale(1.02);
+    opacity: 0.95;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Order Summary Box */
+.summary-box {
+    background-color: #f8f9ff;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #eef0ff;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #555;
+}
+
+.total-line {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px dashed #ddd;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Payment Toggles */
+.radio-group {
+    margin: 20px 0;
+}
+
+.payment-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.payment-option:has(input:checked) {
+    border-color: #667eea;
+    background-color: #f5f7ff;
+}
+
+.payment-option input[type="radio"] {
+    width: auto;
+    margin: 0;
+}
+
+#card-details {
+    margin-top: 15px;
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.form-section {
+    margin-bottom: 25px;
+}
