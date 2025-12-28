@@ -2,7 +2,7 @@ import sqlite3
 from Database.db_manager import get_connection
 from models.shopping_cart import ShoppingCart
 from models.cart_item import CartItem
-from Repositories.product_repo import ProductRepository
+from Database.Repositories.product_repo import ProductRepository
 
 class CartRepository:
     @staticmethod
