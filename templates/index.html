@@ -11,18 +11,20 @@
             <div class="products-grid">
                 {% for product in products %}
                     <div class="product-card">
-                        <img src="{{ product.image_url or 'https://via.placeholder.com/300x250?text=No+Image' }}" class="product-img" alt="{{ product.name }}">
-                        <div class="product-body">
-                            <div class="product-title">{{ product.name }}</div>
-                            <div class="product-brand">
-                                {{ product.details.get('brand') or product.details.get('Brand') or 'General' }}
+                        <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="text-decoration: none; color: inherit;">
+                            <img src="{{ product.image_url or 'https://via.placeholder.com/300x250?text=No+Image' }}" class="product-img" alt="{{ product.name }}">
+                            <div class="product-body">
+                                <div class="product-title">{{ product.name }}</div>
+                                <div class="product-brand">
+                                    {{ product.details.get('brand') or product.details.get('Brand') or 'General' }}
+                                </div>
+                                
+                                <div class="product-footer">
+                                    <div class="product-price">{{ product.get_display_price() }}</div>
+                                    <a href="{{ url_for('shop.add_to_cart', product_id=product.id) }}" class="btn-add" onclick="event.stopPropagation()">Add +</a>
+                                </div>
                             </div>
-                            
-                            <div class="product-footer">
-                                <div class="product-price">{{ product.get_display_price() }}</div>
-                                <a href="{{ url_for('shop.add_to_cart', product_id=product.id) }}" class="btn-add">Add +</a>
-                            </div>
-                        </div>
+                        </a>
                     </div>
                 {% endfor %}
             </div>
