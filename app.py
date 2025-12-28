@@ -5,6 +5,8 @@ from routes.product_route import shop_bp
 from routes.admin_routes import admin_bp
 from routes.cart_routes import cart_bp
 from routes.wishlist_routes import wishlist_bp
+from routes.review_routes import review_bp
+
 
 app = Flask(__name__)
 
@@ -19,6 +21,7 @@ app.register_blueprint(shop_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(cart_bp)
 app.register_blueprint(wishlist_bp)
+app.register_blueprint(review_bp)
 
 
 

@@ -9,21 +9,25 @@
             
             <div class="products-grid">
                 {% for product in products %}
-                    <div class="machine-card">
-                        
-                        <div class="machine-img-container">
-                            <img src="{{ product.image_url }}" 
-                                 class="machine-img" 
-                                 alt="{{ product.name }}"
-                                 onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';">
-                        </div>
+                    <div class="machine-img-container">
+                     <a href="{{ url_for('shop.product_detail', product_id=product.id) }}">
+                     <img src="{{ product.image_url }}" 
+                     class="machine-img" 
+                      alt="{{ product.name }}"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';">
+    </a>
+</div>
+
 
                         <div class="machine-body">
                             <div class="machine-brand">
                                 {{ product.details.get('brand') or product.details.get('Brand') or 'General' }}
                             </div>
                             
+                            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="text-decoration: none; color: inherit;">
                             <h3 class="machine-title">{{ product.name }}</h3>
+                            </a>
+
                             
                             <div class="machine-footer">
                                 <div class="price">${{ "{:,.2f}".format(product.price) }}</div>

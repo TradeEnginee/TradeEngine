@@ -1,0 +1,171 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 40px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+
+    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+        <div style="flex: 1 1 350px; min-width: 300px;">
+            <img src="{{ product.image_url }}"
+                 alt="{{ product.name }}"
+                 style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 10px; border: 1px solid #eee;"
+                 onerror="this.onerror=null;this.src='https://via.placeholder.com/400?text=No+Image';">
+        </div>
+
+        <div style="flex: 1 1 350px; min-width: 300px;">
+            <h1 style="margin-bottom: 10px; color: var(--primary-color);">
+                {{ product.name }}
+            </h1>
+
+            <p style="margin-bottom: 10px; color: #666;">
+                Category:
+                <span style="font-weight: 600; color: var(--secondary-color);">
+                    {{ product.category }}
+                </span>
+            </p>
+
+            {% if avg_rating %}
+                <p style="margin-bottom: 10px; color: #f59e0b;">
+                    ★ {{ "%.1f"|format(avg_rating) }} / 5
+                    <span style="color: #666; font-size: 14px;">
+                        ({{ reviews_count }} review{{ '' if reviews_count == 1 else 's' }})
+                    </span>
+                </p>
+            {% else %}
+                <p style="margin-bottom: 10px; color: #666; font-size: 14px;">
+                    No reviews yet.
+                </p>
+            {% endif %}
+
+            <h2 style="margin: 20px 0; color: var(--primary-color);">
+                {{ product.get_display_price() }}
+            </h2>
+
+            {% if product.is_in_stock() %}
+                <p style="color: #16a34a; font-weight: 600; margin-bottom: 15px;">
+                    In stock ({{ product.stock_quantity }} available)
+                </p>
+            {% else %}
+                <p style="color: var(--danger-color); font-weight: 600; margin-bottom: 15px;">
+                    Out of stock
+                </p>
+            {% endif %}
+
+            <div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
+                <a href="{{ url_for('cart.add_to_cart', product_id=product.id) }}"
+                   class="btn-add"
+                   style="padding: 12px 25px; font-size: 15px;">
+                    <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                </a>
+
+                <a href="{{ url_for('wishlist.add_to_wishlist', product_id=product.id) }}"
+                   class="btn-add"
+                   style="padding: 12px 25px; font-size: 15px; background: white; color: var(--secondary-color); border: 1px solid var(--secondary-color);">
+                    <i class="fa-regular fa-heart"></i> Add to Wishlist
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1.5fr); gap: 30px;">
+        <div>
+            <h3 style="margin-bottom: 15px; color: var(--primary-color);">
+                Specifications
+            </h3>
+            {% if product.details %}
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <tbody>
+                    {% for key, value in product.details.items() %}
+                        <tr>
+                            <td style="padding: 8px 10px; border-bottom: 1px solid #eee; font-weight: 600; width: 35%; color: #555;">
+                                {{ key }}
+                            </td>
+                            <td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #444;">
+                                {{ value }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="color: #777;">No extra specifications available for this product.</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <h3 style="margin-bottom: 15px; color: var(--primary-color);">
+                Reviews
+            </h3>
+
+            {% if reviews %}
+                <div style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+                    {% for review in reviews %}
+                        <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong>{{ review.username or 'User ' ~ review.user_id }}</strong>
+                                <span style="color: #f59e0b; font-size: 14px;">
+                                    ★ {{ review.rating }}/5
+                                </span>
+                            </div>
+                            {% if review.comment %}
+                                <p style="margin-top: 5px; font-size: 14px; color: #555;">
+                                    {{ review.comment }}
+                                </p>
+                            {% endif %}
+                            <p style="margin-top: 3px; font-size: 11px; color: #999;">
+                                {{ review.created_at }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: #777; font-size: 14px;">No reviews for this product yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="{{ url_for('shop.home') }}"
+           style="color: #666; text-decoration: none; font-weight: bold;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Shop
+        </a>
+    </div>
+</div>
+{% endblock %}
+{% if session.get('user_id') %}
+    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+        <h4 style="margin-bottom: 10px; color: var(--primary-color);">
+            Add your review
+        </h4>
+        <form method="POST" action="{{ url_for('review.add_review', product_id=product.id) }}">
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 14px; font-weight: 600;">Rating (1–5)</label>
+                <select name="rating" required
+                        style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                    <option value="">Choose rating</option>
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Very Good</option>
+                    <option value="3">3 - Good</option>
+                    <option value="2">2 - Fair</option>
+                    <option value="1">1 - Poor</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 14px; font-weight: 600;">Comment (optional)</label>
+                <textarea name="comment" rows="3"
+                          style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;"></textarea>
+            </div>
+
+            <button type="submit"
+                    class="btn-add"
+                    style="padding: 8px 18px; font-size: 14px;">
+                Submit Review
+            </button>
+        </form>
+    </div>
+{% else %}
+    <p style="margin-top: 15px; font-size: 13px; color: #777;">
+        Please <a href="{{ url_for('auth.login') }}" style="color: var(--secondary-color); font-weight: 600;">login</a> to add a review.
+    </p>
+{% endif %}
+
