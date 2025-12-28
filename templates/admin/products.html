@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="padding: 40px; max-width: 1200px; margin: 0 auto;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1 style="color: #333;">Manage Products 📦</h1>
+        
+        <a href="{{ url_for('admin.add_product') }}" style="background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; transition: 0.3s;">
+            <i class="fa-solid fa-plus"></i> Add New Product
+        </a>
+    </div>
+
+    <div style="background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; text-align: left; color: #555;">
+                    <th style="padding: 15px; border-bottom: 2px solid #eee;">ID</th>
+                    <th style="padding: 15px; border-bottom: 2px solid #eee;">Image</th>
+                    <th style="padding: 15px; border-bottom: 2px solid #eee;">Name</th>
+                    <th style="padding: 15px; border-bottom: 2px solid #eee;">Category</th>
+                    <th style="padding: 15px; border-bottom: 2px solid #eee;">Price</th>
+                    <th style="padding: 15px; border-bottom: 2px solid #eee;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 15px; color: #888;">#{{ product.id }}</td>
+                    <td style="padding: 15px;">
+                        <img src="{{ product.image_url }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;">
+                    </td>
+                    <td style="padding: 15px; font-weight: bold; color: #333;">{{ product.name }}</td>
+                    <td style="padding: 15px;">
+                        <span style="background: #e3f2fd; color: #1976d2; padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold;">
+                            {{ product.category }}
+                        </span>
+                    </td>
+                    <td style="padding: 15px; color: #28a745; font-weight: bold;">${{ product.price }}</td>
+                    <td style="padding: 15px;">
+                        
+                        <a href="{{ url_for('admin.edit_product', product_id=product.id) }}" 
+                           style="color: var(--secondary-color); font-size: 18px; margin-right: 15px; text-decoration: none;" 
+                           title="Edit Product">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+
+                        <a href="{{ url_for('admin.delete_product', product_id=product.id) }}" 
+                           onclick="return confirm('Are you sure you want to delete {{ product.name }}?');"
+                           style="color: #dc3545; font-size: 18px; text-decoration: none;" 
+                           title="Delete Product">
+                            <i class="fa-solid fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="{{ url_for('admin.dashboard') }}" style="color: #666; text-decoration: none; font-weight: bold;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+</div>
+{% endblock %}

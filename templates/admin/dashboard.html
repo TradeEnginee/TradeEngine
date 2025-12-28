@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="padding: 40px; max-width: 1200px; margin: 0 auto;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+        <h1 style="color: #333;">Admin Dashboard ⚙️</h1>
+        <h4 style="color: #777;">Welcome, {{ session.username }}</h4>
+    </div>
+
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        
+        <div style="background: white; padding: 30px; border-radius: 10px; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; border-bottom: 4px solid var(--secondary-color);">
+            <i class="fa-solid fa-boxes-stacked" style="font-size: 40px; color: var(--secondary-color); margin-bottom: 10px;"></i>
+            <h3 style="color: #777; margin: 10px 0;">Total Products</h3>
+            <h2 style="font-size: 40px; color: #2c3e50; margin: 0;">{{ stats.products }}</h2>
+            
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                <a href="{{ url_for('admin.manage_products') }}" style="color: var(--secondary-color); font-weight: bold; text-decoration: none;">
+                    Manage Products <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 30px; border-radius: 10px; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; border-bottom: 4px solid var(--primary-color);">
+            <i class="fa-solid fa-users" style="font-size: 40px; color: var(--primary-color); margin-bottom: 10px;"></i>
+            <h3 style="color: #777; margin: 10px 0;">Customers</h3>
+            <h2 style="font-size: 40px; color: #2c3e50; margin: 0;">{{ stats.users }}</h2>
+            
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                <span style="color: #999; font-size: 14px;">Active Users</span>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 30px; border-radius: 10px; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; border-bottom: 4px solid #28a745;">
+            <i class="fa-solid fa-cart-shopping" style="font-size: 40px; color: #28a745; margin-bottom: 10px;"></i>
+            <h3 style="color: #777; margin: 10px 0;">Orders</h3>
+            <h2 style="font-size: 40px; color: #2c3e50; margin: 0;">{{ stats.orders }}</h2>
+            
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                <span style="color: #999; font-size: 14px;">Total Sales</span>
+            </div>
+        </div>
+        
+    </div>
+
+    <div style="margin-top: 50px; text-align: center;">
+        <a href="{{ url_for('shop.home') }}" style="background: #eee; color: #333; padding: 12px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; transition: 0.3s;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Shop
+        </a>
+    </div>
+
+</div>
+{% endblock %}
