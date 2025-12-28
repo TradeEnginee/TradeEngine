@@ -2,6 +2,7 @@ from flask import Flask
 from Database.db_manager import init_schema
 from routes.auth_routes import auth_bp
 from routes.product_route import shop_bp
+from routes.admin_routes import admin_bp
 from routes.cart_routes import cart_bp
 from routes.wishlist_routes import wishlist_bp
 
@@ -15,6 +16,7 @@ init_schema()
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(shop_bp)
+app.register_blueprint(admin_bp)
 app.register_blueprint(cart_bp)
 app.register_blueprint(wishlist_bp)
 
