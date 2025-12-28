@@ -1,193 +1,214 @@
-# routes/checkout_routes.py
+# checkout_routes.py 
+
 from flask import Blueprint, request, jsonify
-from models.order import Order, OrderItem, ShippingAddress, OrderStatus
-from payment_processor import PaymentContext, PaymentResult
+import json
 from datetime import datetime
+from models.order import Order, ShippingAddress, OrderItem
+from models.payment_processor import PaymentProcessor, CreditCardStrategy, CashOnDeliveryStrategy, PaymentContext
+from Database.Repositories.order_repo import OrderRepository
+from Database.db_manager import get_connection
 
-checkout_bp = Blueprint('checkout', __name__, url_prefix='/api/checkout')
+checkout_bp = Blueprint('checkout', __name__)
 
-# In-memory storage (replace with database)
-orders_db = {}
-order_counter = 1
+# Payment strategy factory
+def get_payment_strategy(method: str, details: dict = None):
+    if method == 'credit_card':
+        return CreditCardStrategy()
+    elif method == 'cod':
+        return CashOnDeliveryStrategy()
+    else:
+        raise ValueError(f"Unknown payment method: {method}")
 
 
-def validate_shipping_address(data: dict) -> tuple[bool, str, ShippingAddress]:
-    """Validate and create ShippingAddress from request data"""
-    required_fields = ["full_name", "address_line1", "city", "state", "postal_code", "country", "phone"]
+@checkout_bp.route('/checkout', methods=['POST'])
+def create_order():
+    """Create a new order with shipping info and process payment"""
+    data = request.get_json()
     
+    # Validate required fields
+    required_fields = ['user_id', 'items', 'shipping', 'payment_method']
     for field in required_fields:
-        if field not in data or not data[field]:
-            return False, f"Missing required field: {field}", None
+        if field not in data:
+            return jsonify({'error': f'Missing required field: {field}'}), 400
     
-    # Validate phone number (basic)
-    phone = str(data["phone"]).replace("-", "").replace(" ", "")
-    if not phone.isdigit() or len(phone) < 10:
-        return False, "Invalid phone number", None
-    
-    # Validate postal code (basic)
-    if len(str(data["postal_code"])) < 3:
-        return False, "Invalid postal code", None
-    
-    address = ShippingAddress(
-        full_name=data["full_name"],
-        address_line1=data["address_line1"],
-        address_line2=data.get("address_line2", ""),
-        city=data["city"],
-        state=data["state"],
-        postal_code=data["postal_code"],
-        country=data["country"],
-        phone=data["phone"]
+    # Build ShippingAddress from request data
+    shipping_data = data['shipping']
+    shipping = ShippingAddress(
+        full_name=shipping_data.get('full_name', ''),
+        address_line1=shipping_data.get('address_line1', ''),
+        address_line2=shipping_data.get('address_line2', ''),
+        city=shipping_data.get('city', ''),
+        state=shipping_data.get('state', ''), # Added state handling
+        postal_code=shipping_data.get('postal_code', ''),
+        country=shipping_data.get('country', ''),
+        phone=shipping_data.get('phone', '')
     )
     
-    return True, "Valid", address
-
-
-@checkout_bp.route('/shipping', methods=['POST'])
-def save_shipping_info():
-    """Save shipping information for the order"""
-    global order_counter
+    # Build OrderItems from request data
+    items = []
+    total_price = 0.0
+    for item_data in data['items']:
+        item = OrderItem(
+            product_id=item_data['product_id'],
+            product_name=item_data['product_name'],
+            quantity=item_data['quantity'],
+            unit_price=item_data['unit_price']
+        )
+        items.append(item)
+        total_price += item.quantity * item.unit_price
     
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
+    # Process payment using Strategy Pattern
+    payment_method = data['payment_method']
+    payment_details = data.get('payment_details', {})
     
-    # Validate shipping address
-    is_valid, message, shipping_address = validate_shipping_address(data.get("shipping_address", {}))
-    if not is_valid:
-        return jsonify({"error": message}), 400
+    try:
+        strategy = get_payment_strategy(payment_method, payment_details)
+        # Use PaymentContext appropriately
+        processor = PaymentContext(strategy)
+        # process_payment requires amount and payment_data
+        payment_result = processor.process_payment(total_price, payment_details)
+        
+        if not payment_result.success: # PaymentResult object, not dict
+            return jsonify({'error': 'Payment failed', 'details': payment_result.message}), 400
+            
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
     
-    # Validate cart items
-    cart_items = data.get("cart_items", [])
-    if not cart_items:
-        return jsonify({"error": "Cart is empty"}), 400
+    # Save order to database
+    conn = get_connection()
+    cursor = conn.cursor()
     
-    # Create order items
-    order_items = []
-    for item in cart_items:
-        order_items.append(OrderItem(
-            product_id=item["product_id"],
-            product_name=item["product_name"],
-            quantity=item["quantity"],
-            unit_price=item["unit_price"]
+    try:
+        # Insert order with JSON shipping address
+        # Corrected column name: total_price -> total_amount to match schema
+        cursor.execute("""
+            INSERT INTO orders (user_id, shipping_address, payment_method, total_amount, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            data['user_id'],
+            shipping.to_json(),  # Store as JSON string
+            payment_method,
+            total_price,
+            'confirmed' if payment_result.success else 'pending',
+            datetime.now().isoformat()
         ))
-    
-    # Create order
-    order = Order(
-        id=order_counter,
-        user_id=data.get("user_id", 0),
-        items=order_items,
-        shipping_address=shipping_address,
-        status=OrderStatus.PENDING
-    )
-    
-    orders_db[order_counter] = order
-    order_counter += 1
-    
-    return jsonify({
-        "message": "Shipping information saved",
-        "order_id": order.id,
-        "order_summary": order.to_dict()
-    }), 201
-
-
-@checkout_bp.route('/payment-methods', methods=['GET'])
-def get_payment_methods():
-    """Get available payment methods"""
-    methods = [
-        {
-            "id": "credit_card",
-            "name": "Credit Card",
-            "description": "Pay securely with Visa, Mastercard, or American Express",
-            "icon": "credit-card"
-        },
-        {
-            "id": "paypal",
-            "name": "PayPal",
-            "description": "Pay with your PayPal account",
-            "icon": "paypal"
-        },
-        {
-            "id": "cod",
-            "name": "Cash on Delivery",
-            "description": "Pay when your order arrives",
-            "icon": "banknote"
+        
+        order_id = cursor.lastrowid
+        
+        # Insert order items
+        for item in items:
+            cursor.execute("""
+                INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase)
+                VALUES (?, ?, ?, ?)
+            """, (order_id, item.product_id, item.quantity, item.unit_price))
+        
+        conn.commit()
+        
+        # Create response dictionary from PaymentResult
+        payment_response = {
+            'success': payment_result.success,
+            'transaction_id': payment_result.transaction_id,
+            'message': payment_result.message,
+            'data': payment_result.data
         }
-    ]
-    return jsonify({"payment_methods": methods}), 200
 
-
-@checkout_bp.route('/process-payment', methods=['POST'])
-def process_payment():
-    """Process payment for an order using Strategy Pattern"""
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-    
-    order_id = data.get("order_id")
-    payment_method = data.get("payment_method")
-    payment_data = data.get("payment_data", {})
-    
-    # Validate order exists
-    if order_id not in orders_db:
-        return jsonify({"error": "Order not found"}), 404
-    
-    order = orders_db[order_id]
-    
-    # Check order status
-    if order.status != OrderStatus.PENDING:
-        return jsonify({"error": "Order has already been processed"}), 400
-    
-    # Validate payment method
-    if payment_method not in PaymentContext.get_available_methods():
         return jsonify({
-            "error": f"Invalid payment method. Available: {PaymentContext.get_available_methods()}"
-        }), 400
+            'success': True,
+            'order_id': order_id,
+            'total': total_price,
+            'status': 'confirmed',
+            'payment': payment_response
+        }), 201
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+
+@checkout_bp.route('/orders/<int:order_id>', methods=['GET'])
+def get_order(order_id):
+    """Retrieve an order by ID"""
+    conn = get_connection()
+    cursor = conn.cursor()
     
-    # Use Strategy Pattern to process payment
-    payment_context = PaymentContext()
-    payment_context.set_strategy(payment_method)
-    
-    result: PaymentResult = payment_context.process_payment(order.total, payment_data)
-    
-    if result.success:
-        # Update order
-        order.payment_method = payment_method
-        order.transaction_id = result.transaction_id
-        order.status = OrderStatus.PAID if payment_method != "cod" else OrderStatus.PROCESSING
-        order.updated_at = datetime.utcnow()
+    try:
+        cursor.execute("""
+            SELECT id, user_id, shipping_address, payment_method, total_amount, status, created_at
+            FROM orders WHERE id = ?
+        """, (order_id,))
+        
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'error': 'Order not found'}), 404
+        
+        # Deserialize shipping address from JSON
+        shipping = ShippingAddress.from_json(row['shipping_address'])
+        
+        # Get order items
+        cursor.execute("""
+            SELECT product_id, quantity, price_at_purchase
+            FROM order_items WHERE order_id = ?
+        """, (order_id,))
+        
+        items = [
+            {
+                'product_id': item['product_id'],
+                'quantity': item['quantity'],
+                'unit_price': item['price_at_purchase']
+            }
+            for item in cursor.fetchall()
+        ]
         
         return jsonify({
-            "success": True,
-            "message": result.message,
-            "transaction_id": result.transaction_id,
-            "order": order.to_dict()
+            'order_id': row['id'],
+            'user_id': row['user_id'],
+            'shipping': {
+                'full_name': shipping.full_name,
+                'address_line1': shipping.address_line1,
+                'address_line2': shipping.address_line2,
+                'city': shipping.city,
+                'postal_code': shipping.postal_code,
+                'country': shipping.country,
+                'phone': shipping.phone
+            },
+            'payment_method': row['payment_method'],
+            'total': row['total_amount'],
+            'status': row['status'],
+            'items': items,
+            'created_at': row['created_at']
         }), 200
-    else:
-        return jsonify({
-            "success": False,
-            "message": result.message
-        }), 400
+        
+    finally:
+        conn.close()
 
 
-@checkout_bp.route('/order/<int:order_id>', methods=['GET'])
-def get_order(order_id):
-    """Get order details"""
-    if order_id not in orders_db:
-        return jsonify({"error": "Order not found"}), 404
+@checkout_bp.route('/orders/user/<int:user_id>', methods=['GET'])
+def get_user_orders(user_id):
+    """Get all orders for a user"""
+    conn = get_connection()
+    cursor = conn.cursor()
     
-    return jsonify({"order": orders_db[order_id].to_dict()}), 200
-
-
-@checkout_bp.route('/validate-address', methods=['POST'])
-def validate_address():
-    """Validate shipping address without creating order"""
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-    
-    is_valid, message, _ = validate_shipping_address(data)
-    
-    return jsonify({
-        "valid": is_valid,
-        "message": message
-    }), 200 if is_valid else 400
+    try:
+        cursor.execute("""
+            SELECT id, shipping_address, payment_method, total_amount, status, created_at
+            FROM orders WHERE user_id = ? ORDER BY created_at DESC
+        """, (user_id,))
+        
+        orders = []
+        for row in cursor.fetchall():
+            shipping = ShippingAddress.from_json(row['shipping_address'])
+            orders.append({
+                'order_id': row['id'],
+                'shipping_city': shipping.city,
+                'payment_method': row['payment_method'],
+                'total': row['total_amount'],
+                'status': row['status'],
+                'created_at': row['created_at']
+            })
+        
+        return jsonify({'orders': orders}), 200
+        
+    finally:
+        conn.close()

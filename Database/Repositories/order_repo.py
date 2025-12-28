@@ -3,17 +3,17 @@ from Database.db_manager import get_connection
 
 class OrderRepository:
     @staticmethod
-    def create_order(user_id, cart_items, total_amount, shipping_address, payment_method="Cash"):
+    def create_order(user_id, cart_items, total_amount, shipping_address, payment_method="Cash", status="Pending"):
         conn = None
         try:
             conn = get_connection()
             cursor = conn.cursor()
             
             sql_order = """
-            INSERT INTO orders (user_id, total_amount, shipping_address, payment_method)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO orders (user_id, total_amount, shipping_address, payment_method, status)
+            VALUES (?, ?, ?, ?, ?)
             """
-            cursor.execute(sql_order, (user_id, total_amount, shipping_address, payment_method))
+            cursor.execute(sql_order, (user_id, total_amount, shipping_address, payment_method, status))
             
             order_id = cursor.lastrowid
             
