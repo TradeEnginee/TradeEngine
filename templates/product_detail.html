@@ -258,7 +258,8 @@
     function addToCart(event) {
         event.preventDefault();
         let productId = "{{ product.id }}";
-        window.location.href = "{{ url_for('cart.add_to_cart', product_id=0) }}".replace('0', productId);
+        let quantity = document.getElementById('quantity').value;
+        window.location.href = "{{ url_for('cart.add_to_cart', product_id=0) }}".replace('0', productId) + "?quantity=" + quantity;
     }
 </script>
 
