@@ -1,0 +1,19 @@
+{% extends 'layout.html' %} {% block content %}
+<div class="container">
+  <div
+    class="auth-box"
+    style="text-align: center; max-width: 600px; margin: 2rem auto"
+  >
+    <div style="font-size: 4rem; margin-bottom: 1rem">❌</div>
+    <h2 style="color: var(--danger-color)">Payment Failed</h2>
+    <p style="margin-bottom: 2rem">{{ error_message }}</p>
+    <a
+      href="/checkout"
+      class="login-btn"
+      style="display: inline-block; text-decoration: none"
+    >
+      <i class="fa-solid fa-rotate-left"></i> Try Again
+    </a>
+  </div>
+</div>
+{% endblock %}
