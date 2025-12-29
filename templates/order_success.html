@@ -1,0 +1,35 @@
+{% extends 'layout.html' %} {% block content %}
+<div class="container">
+  <div
+    class="auth-box"
+    style="text-align: center; max-width: 600px; margin: 2rem auto"
+  >
+    <div style="font-size: 4rem; margin-bottom: 1rem">🎉</div>
+    <h2 style="color: var(--secondary-color)">Order Confirmed!</h2>
+    <p style="color: var(--text-color); margin-bottom: 2rem">
+      Thank you for your purchase. Your order has been placed successfully.
+    </p>
+    <div
+      style="
+        background: var(--bg-color);
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: left;
+        margin-bottom: 2rem;
+      "
+    >
+      <p><strong>Order ID:</strong> #{{ order_id }}</p>
+      <p><strong>Total Amount:</strong> ${{ total }}</p>
+      <p><strong>Payment Method:</strong> {{ method }}</p>
+      <p><strong>Status:</strong> {{ status }}</p>
+    </div>
+    <a
+      href="/shop"
+      class="login-btn"
+      style="display: inline-block; text-decoration: none"
+    >
+      <i class="fa-solid fa-bag-shopping"></i> Continue Shopping
+    </a>
+  </div>
+</div>
+{% endblock %}
