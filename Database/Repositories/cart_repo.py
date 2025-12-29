@@ -64,13 +64,30 @@ class CartRepository:
         try:
             conn = get_connection()
             cursor = conn.cursor()
+            
+            # 1. Check Product Stock
+            product = ProductRepository.get_product_by_id(product_id)
+            if not product:
+                print("❌ Product not found.")
+                return False
+                
+            # 2. Check Existing Cart Quantity
             check_sql = "SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?"
             cursor.execute(check_sql, (user_id, product_id))
             existing = cursor.fetchone()
+            
+            # Calculate Projected Total
+            current_cart_qty = existing['quantity'] if existing else 0
+            new_total_qty = current_cart_qty + quantity
+            
+            # 3. Validate Stock
+            if new_total_qty > product.stock_quantity:
+                print(f"❌ Insufficient stock. Requested: {new_total_qty}, Available: {product.stock_quantity}")
+                return False
 
+            # 4. Proceed to Update or Insert
             if existing:
-                new_qty = existing['quantity'] + quantity
-                return CartRepository.update_quantity(user_id, product_id, new_qty)
+                return CartRepository.update_quantity(user_id, product_id, new_total_qty)
             else:
                 insert_sql = "INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)"
                 cursor.execute(insert_sql, (user_id, product_id, quantity))

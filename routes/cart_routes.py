@@ -28,7 +28,7 @@ def add_to_cart(product_id):
     if CartRepository.add_or_update_item(user_id, product_id, quantity):
         flash("Product added to cart!", "success")
     else:
-        flash("Could not add product. Please try again.", "error")
+        flash("Could not add product. Not enough stock available.", "error")
         
     return redirect(request.referrer or url_for('cart.view_cart'))
 
