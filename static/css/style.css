@@ -438,3 +438,115 @@ ul {
     color: var(--accent-color);
     margin-bottom: 20px;
 }
+/* =========================================
+           Product Cards (Home)
+   ========================================= */
+
+.category-section {
+    margin-bottom: 50px;
+}
+
+.product-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e1e5ea;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(47, 65, 86, 0.15);
+    border-color: var(--secondary-color);
+}
+
+.product-img-container {
+    width: 100%;
+    height: 220px;
+    background: #f9f9f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.product-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s;
+}
+
+.product-card:hover .product-img {
+    transform: scale(1.05);
+}
+
+.product-body {
+    padding: 18px 18px 15px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.product-brand {
+    font-size: 12px;
+    color: var(--secondary-color);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.product-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1.4;
+    min-height: 40px;
+}
+
+.product-footer {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.product-price {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.product-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-wishlist {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary-color);
+    background: #fff;
+}
+
+.btn-wishlist:hover {
+    background: #ffeef0;
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 25px;
+    padding-bottom: 30px;
+}
