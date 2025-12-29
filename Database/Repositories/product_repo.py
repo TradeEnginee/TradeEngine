@@ -247,3 +247,17 @@ class ProductRepository:
             return False
         finally:
             if conn: conn.close()
+
+    @staticmethod
+    def get_all_categories():
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != ''")
+            rows = cursor.fetchall()
+            return [row['category'] for row in rows]
+        except Exception as e:
+            print(f"Error fetching categories: {e}")
+            return []
+        finally:
+            conn.close()

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout - TradeEngine</title>
+    <!-- Use the official project CSS -->
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <!-- Font Awesome for icons (same as layout.html) -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h2><i class="fa-solid fa-cart-shopping"></i> Complete Your Order</h2>
+
+      <form action="/submit_checkout" method="POST" class="checkout-layout">
+        <!-- LEFT COLUMN: SHIPPING & PAYMENT -->
+        <div class="checkout-form">
+          <div class="form-section">
+            <h3><i class="fa-solid fa-truck"></i> Shipping Details</h3>
+            <input
+              type="text"
+              name="full_name"
+              placeholder="Full Name"
+              required
+            />
+            <input
+              type="text"
+              name="address_line1"
+              placeholder="Address Line 1"
+              required
+            />
+            <input
+              type="text"
+              name="address_line2"
+              placeholder="Address Line 2 (Optional)"
+            />
+
+            <div class="grid-2">
+              <input type="text" name="city" placeholder="City" required />
+              <input type="text" name="state" placeholder="State" required />
+            </div>
+
+            <div class="grid-2">
+              <input
+                type="text"
+                name="postal_code"
+                placeholder="Postal Code"
+                required
+              />
+              <input
+                type="text"
+                name="country"
+                placeholder="Country"
+                required
+              />
+            </div>
+
+            <input
+              type="tel"
+              name="phone"
+              placeholder="Phone Number (e.g. 0123456789)"
+              pattern="[0-9]{10,15}"
+              title="Please enter a valid phone number (10-15 digits)"
+              required
+            />
+          </div>
+
+          <div class="form-section">
+            <h3><i class="fa-solid fa-credit-card"></i> Payment Method</h3>
+            <div class="radio-group">
+              <label class="payment-option">
+                <input
+                  type="radio"
+                  name="payment_method"
+                  value="credit_card"
+                  checked
+                  onchange="document.getElementById('card-details').style.display='block'"
+                />
+                <span><i class="fa-solid fa-credit-card"></i> Credit Card</span>
+              </label>
+
+              <label class="payment-option">
+                <input
+                  type="radio"
+                  name="payment_method"
+                  value="cod"
+                  onchange="document.getElementById('card-details').style.display='none'"
+                />
+                <span
+                  ><i class="fa-solid fa-money-bill-wave"></i> Cash on
+                  Delivery</span
+                >
+              </label>
+            </div>
+
+            <div id="card-details">
+              <h4>Enter Card Details</h4>
+              <input
+                type="text"
+                name="card_number"
+                placeholder="Card Number (16 digits)"
+                pattern="[0-9]{13,19}"
+                inputmode="numeric"
+                title="Please enter a valid card number (13-19 digits)"
+              />
+              <input
+                type="text"
+                name="cardholder_name"
+                placeholder="Cardholder Name"
+              />
+              <div class="grid-2">
+                <input
+                  type="number"
+                  name="expiry_month"
+                  placeholder="MM"
+                  min="1"
+                  max="12"
+                />
+                <input
+                  type="number"
+                  name="expiry_year"
+                  placeholder="YYYY"
+                  min="2024"
+                />
+              </div>
+              <input
+                type="text"
+                name="cvv"
+                placeholder="CVV"
+                pattern="[0-9]{3,4}"
+                inputmode="numeric"
+                title="Please enter a valid CVV (3-4 digits)"
+                maxlength="4"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: SUMMARY -->
+        <div class="checkout-summary">
+          <div class="summary-box">
+            <h3>Order Summary</h3>
+
+            {% for item in items %}
+            <div class="summary-item">
+              <span
+                ><i class="fa-solid fa-box"></i> {{ item.name }} (x{{
+                item.quantity }})</span
+              >
+              <span>${{ "%.2f"|format(item.price * item.quantity) }}</span>
+            </div>
+            {% endfor %}
+
+            <div class="summary-item" style="color: #047857">
+              <span><i class="fa-solid fa-tag"></i> Shipping</span>
+              <span>Free</span>
+            </div>
+
+            <div class="summary-item total-line">
+              <span>Total Amount</span>
+              <span>${{ "%.2f"|format(total) }}</span>
+            </div>
+
+            <button type="submit">
+              <i class="fa-solid fa-lock"></i> Place Order Securely
+            </button>
+
+            <p style="font-size: 12px; color: #888; margin-top: 15px">
+              By placing your order, you agree to our terms of service.
+            </p>
+          </div>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

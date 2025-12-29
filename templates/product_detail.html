@@ -39,9 +39,9 @@
             <!-- Rating Section -->
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
                 <div style="display: flex; gap: 5px;">
-                    {% if average_rating > 0 %}
+                    {% if avg_rating > 0 %}
                         {% for i in range(5) %}
-                            {% if i < average_rating|int %}
+                            {% if i < avg_rating|int %}
                                 <i class="fa-solid fa-star" style="color: #FFD700; font-size: 18px;"></i>
                             {% else %}
                                 <i class="fa-regular fa-star" style="color: #ddd; font-size: 18px;"></i>
@@ -54,8 +54,8 @@
                     {% endif %}
                 </div>
                 <span style="color: var(--secondary-color); font-size: 14px;">
-                    {% if average_rating > 0 %}
-                        {{ average_rating }}
+                    {% if avg_rating > 0 %}
+                        {{ "%.1f"|format(avg_rating) }}
                     {% else %}
                         No ratings yet
                     {% endif %}
@@ -84,7 +84,7 @@
             <!-- Divider -->
             <hr style="border: none; height: 1px; background: var(--accent-color); margin: 25px 0;">
 
-            <!-- Quantity Selector -->
+            <!-- Quantity + Actions -->
             {% if product.is_in_stock() %}
             <div style="margin-bottom: 25px;">
                 <label style="display: block; margin-bottom: 10px; font-weight: 600; color: var(--primary-color);">Quantity:</label>
@@ -99,6 +99,13 @@
             <a href="#" onclick="addToCart(event)" style="display: block; background: var(--primary-color); color: white; padding: 16px; text-align: center; border-radius: 12px; font-size: 18px; font-weight: 700; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 12px rgba(47, 65, 86, 0.2);">
                 <i class="fa-solid fa-cart-shopping"></i> Add to Cart
             </a>
+
+            <!-- Add to Wishlist Button -->
+            <a href="{{ url_for('wishlist.add_to_wishlist', product_id=product.id) }}"
+               style="display: block; margin-top: 10px; background: white; color: var(--secondary-color); padding: 12px 16px; text-align: center; border-radius: 12px; font-size: 16px; font-weight: 600; text-decoration: none; border: 1px solid var(--secondary-color);">
+                <i class="fa-regular fa-heart"></i> Add to Wishlist
+            </a>
+
             {% else %}
             <button disabled style="display: block; width: 100%; background: #ddd; color: #999; padding: 16px; text-align: center; border-radius: 12px; font-size: 18px; font-weight: 700; border: none; cursor: not-allowed;">
                 Out of Stock
@@ -218,7 +225,16 @@
         {% endif %}
     </div>
 
+    <!-- Back to shop -->
+    <div style="margin-top: 30px;">
+        <a href="{{ url_for('shop.home') }}"
+           style="color: #666; text-decoration: none; font-weight: bold;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Shop
+        </a>
+    </div>
+
 </div>
+
 <!-- JavaScript for Quantity Selector -->
 <script>
     const maxQty = parseInt("{{ product.stock_quantity }}");
@@ -241,9 +257,9 @@
     
     function addToCart(event) {
         event.preventDefault();
-        let quantity = document.getElementById('quantity').value;
         let productId = "{{ product.id }}";
-        window.location.href = "{{ url_for('shop.add_to_cart', product_id=0) }}".replace('0', productId) + "?quantity=" + quantity;
+        window.location.href = "{{ url_for('cart.add_to_cart', product_id=0) }}".replace('0', productId);
     }
 </script>
+
 {% endblock %}

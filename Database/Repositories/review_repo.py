@@ -16,7 +16,7 @@ class ReviewRepository:
             rating=row["rating"],
             comment=row["comment"],
             created_at=row["created_at"],
-            username=row.get("username")  
+            username=row["username"]
         )
 
     # =========================
