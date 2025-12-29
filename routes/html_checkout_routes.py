@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template_string
+from flask import Blueprint, request, render_template_string, session
 from datetime import datetime
 from models.order import ShippingAddress, OrderItem
 from models.payment_processor import CreditCardStrategy, CashOnDeliveryStrategy, PaymentContext
@@ -6,7 +6,84 @@ from Database.db_manager import get_connection
 
 html_checkout_bp = Blueprint('html_checkout', __name__)
 
-# Success page template
+
+# ============================================================
+# CART & USER HELPER FUNCTIONS (Replace these when cart is implemented)
+# ============================================================
+
+def get_current_user_id():
+    """
+    Get the current logged-in user's ID.
+    
+    TODO: Replace with Flask-Login integration:
+        from flask_login import current_user
+        return current_user.id if current_user.is_authenticated else None
+    """
+    # Check session first (for when user auth is implemented)
+    if 'user_id' in session:
+        return session['user_id']
+    
+    # Default to guest user (ID: 1) for testing
+    return 1
+
+
+def get_cart_items():
+    """
+    Get the current user's cart items.
+    
+    TODO: Replace with actual cart implementation:
+        - Session-based cart: return session.get('cart', [])
+        - Database cart: query cart_items table for user_id
+        - API-based cart: fetch from cart service
+    
+    Returns:
+        list: List of dicts with keys: product_id, product_name, quantity, unit_price
+    """
+    # Check if cart exists in session
+    if 'cart' in session and len(session['cart']) > 0:
+        return session['cart']
+    
+    # Fallback: Use demo products from database for testing
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, price FROM products LIMIT 3")
+    products = cursor.fetchall()
+    conn.close()
+    
+    # Create demo cart items (products is list of tuples: (id, name, price))
+    demo_cart = []
+    for product in products:
+        demo_cart.append({
+            'product_id': product[0],      # id
+            'product_name': product[1],    # name
+            'quantity': 1,                 # Default quantity
+            'unit_price': product[2]       # price
+        })
+    
+    return demo_cart
+
+
+def calculate_cart_total(cart_items):
+    """Calculate total price from cart items."""
+    return sum(item['quantity'] * item['unit_price'] for item in cart_items)
+
+
+def clear_cart():
+    """
+    Clear the user's cart after successful order.
+    
+    TODO: Implement based on your cart storage:
+        - Session: session.pop('cart', None)
+        - Database: DELETE FROM cart_items WHERE user_id = ?
+    """
+    if 'cart' in session:
+        session.pop('cart', None)
+
+
+# ============================================================
+# HTML TEMPLATES
+# ============================================================
+
 SUCCESS_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -15,23 +92,24 @@ SUCCESS_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Success</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <div class="card" style="text-align: center; max-width: 600px; margin: 4rem auto; padding: 3rem;">
+        <div class="auth-box" style="text-align: center; max-width: 600px;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
-            <h1 style="color: var(--success-color); margin-bottom: 1rem;">Order Confirmed!</h1>
-            <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            <h2 style="color: var(--secondary-color);">Order Confirmed!</h2>
+            <p style="color: var(--text-color); margin-bottom: 2rem;">
                 Thank you for your purchase. Your order has been placed successfully.
             </p>
-            <div style="background: #f1f5f9; padding: 1.5rem; border-radius: 8px; text-align: left; margin-bottom: 2rem;">
+            <div style="background: var(--bg-color); padding: 1.5rem; border-radius: 12px; text-align: left; margin-bottom: 2rem;">
                 <p><strong>Order ID:</strong> #{{ order_id }}</p>
                 <p><strong>Total Amount:</strong> ${{ total }}</p>
                 <p><strong>Payment Method:</strong> {{ method }}</p>
                 <p><strong>Status:</strong> {{ status }}</p>
             </div>
-            <a href="/checkout" style="display: inline-block; padding: 1rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: var(--radius); font-weight: 600;">
-                Place Another Order
+            <a href="/shop" class="login-btn" style="display: inline-block; text-decoration: none;">
+                <i class="fa-solid fa-bag-shopping"></i> Continue Shopping
             </a>
         </div>
     </div>
@@ -47,15 +125,16 @@ ERROR_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Failed</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <div class="card" style="text-align: center; max-width: 600px; margin: 4rem auto; padding: 3rem;">
+        <div class="auth-box" style="text-align: center; max-width: 600px;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">❌</div>
-            <h1 style="color: var(--error-color); margin-bottom: 1rem;">Payment Failed</h1>
+            <h2 style="color: var(--danger-color);">Payment Failed</h2>
             <p style="margin-bottom: 2rem;">{{ error_message }}</p>
-            <a href="/checkout" style="display: inline-block; padding: 1rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: var(--radius); font-weight: 600;">
-                Try Again
+            <a href="/checkout" class="login-btn" style="display: inline-block; text-decoration: none;">
+                <i class="fa-solid fa-rotate-left"></i> Try Again
             </a>
         </div>
     </div>
@@ -63,11 +142,22 @@ ERROR_TEMPLATE = """
 </html>
 """
 
+
+# ============================================================
+# CHECKOUT ROUTE
+# ============================================================
+
 @html_checkout_bp.route('/submit_checkout', methods=['POST'])
 def submit_checkout():
     """Handle HTML form submission for checkout"""
     try:
-        # Get form data
+        # 1. Get current user
+        user_id = get_current_user_id()
+        if user_id is None:
+            return render_template_string(ERROR_TEMPLATE, 
+                error_message="Please login to complete your order.")
+        
+        # 2. Build shipping address from form
         shipping = ShippingAddress(
             full_name=request.form.get('full_name', ''),
             address_line1=request.form.get('address_line1', ''),
@@ -79,24 +169,28 @@ def submit_checkout():
             phone=request.form.get('phone', '')
         )
         
-        # Fetch actual products from database
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name, price FROM products")
-        products = cursor.fetchall()
+        # 3. Get cart items and calculate total
+        cart_items = get_cart_items()
+        if not cart_items:
+            return render_template_string(ERROR_TEMPLATE, 
+                error_message="Your cart is empty. Please add items before checkout.")
         
-        items = []
-        total_price = 0
-        for p in products:
-            qty = 1 if p[0] == 1 else 2
-            item = OrderItem(product_id=p[0], product_name=p[1], quantity=qty, unit_price=p[2])
-            items.append(item)
-            total_price += item.quantity * item.unit_price
+        total_price = calculate_cart_total(cart_items)
         
-        # Get payment method
+        # Convert cart items to OrderItem objects
+        items = [
+            OrderItem(
+                product_id=item['product_id'],
+                product_name=item['product_name'],
+                quantity=item['quantity'],
+                unit_price=item['unit_price']
+            )
+            for item in cart_items
+        ]
+        
+        # 4. Process payment using Strategy Pattern
         payment_method = request.form.get('payment_method', 'cod')
         
-        # Process payment
         if payment_method == 'credit_card':
             strategy = CreditCardStrategy()
             payment_details = {
@@ -116,7 +210,7 @@ def submit_checkout():
         if not payment_result.success:
             return render_template_string(ERROR_TEMPLATE, error_message=payment_result.message)
         
-        # Save to database
+        # 5. Save order to database
         conn = get_connection()
         cursor = conn.cursor()
         
@@ -124,7 +218,7 @@ def submit_checkout():
             INSERT INTO orders (user_id, shipping_address, payment_method, total_amount, status, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (
-            1,  # Hardcoded user_id
+            user_id,
             shipping.to_json(),
             payment_method,
             total_price,
@@ -134,7 +228,7 @@ def submit_checkout():
         
         order_id = cursor.lastrowid
         
-        # Insert order items
+        # 6. Insert order items
         for item in items:
             cursor.execute("""
                 INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase)
@@ -144,7 +238,10 @@ def submit_checkout():
         conn.commit()
         conn.close()
         
-        # Return success page
+        # 7. Clear the cart after successful order
+        clear_cart()
+        
+        # 8. Return success page
         return render_template_string(
             SUCCESS_TEMPLATE,
             order_id=order_id,
