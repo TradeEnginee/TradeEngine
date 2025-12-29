@@ -22,8 +22,10 @@ def add_to_cart(product_id):
         return redirect(url_for('auth.login'))
 
     user_id = session.get('user_id')
+    quantity = int(request.args.get('quantity', 1))
+
     
-    if CartRepository.add_or_update_item(user_id, product_id, 1):
+    if CartRepository.add_or_update_item(user_id, product_id, quantity):
         flash("Product added to cart!", "success")
     else:
         flash("Could not add product. Please try again.", "error")
