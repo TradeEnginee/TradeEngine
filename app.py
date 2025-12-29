@@ -46,24 +46,34 @@ def load_user(user_id):
 @app.route('/checkout')
 def checkout_page():
     """Serve the dynamic HTML checkout page"""
+    from flask import render_template, session, redirect, url_for, flash
+    from Database.Repositories.cart_repo import CartRepository
+    from Database.Repositories.user_repo import UserRepository
+    
     try:
-        from routes.html_checkout_routes import get_cart_items, calculate_cart_total
-        from flask import render_template
+        if 'user_id' not in session:
+            flash("Please login to proceed to checkout.", "error")
+            return redirect(url_for('auth.login'))
+            
+        user_id = session['user_id']
+        user_obj = UserRepository.get_user_by_id(user_id)
+        cart = CartRepository.get_cart_by_user(user_obj)
         
-        # Now fetches real items from database via the refactored helper
-        cart_items = get_cart_items()
-        total = calculate_cart_total(cart_items)
+        items = []
+        total = 0
         
-        # Correctly maps the product_id/name keys from the helper
-        items = [
-            {
-                'id': item['product_id'],
-                'name': item['product_name'],
-                'price': item['unit_price'],
-                'quantity': item['quantity']
-            }
-            for item in cart_items
-        ]
+        if cart and not cart.is_empty:
+            total = cart.subtotal
+            # Convert ShoppingCart items to dicts expected by template
+            items = [
+                {
+                    'id': item.product.id,
+                    'name': item.product.name,
+                    'price': item.product.price,
+                    'quantity': item.quantity
+                }
+                for item in cart.items
+            ]
             
         return render_template('checkout.html', items=items, total=total)
     except Exception as e:

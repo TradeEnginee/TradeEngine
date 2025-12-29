@@ -1,4 +1,5 @@
-from flask import Blueprint, request, render_template_string, session
+from Database.Repositories.cart_repo import CartRepository
+from flask import Blueprint, request, render_template_string, session, flash, redirect, url_for, render_template
 from datetime import datetime
 from models.order import ShippingAddress, OrderItem
 from models.payment_processor import CreditCardStrategy, CashOnDeliveryStrategy, PaymentContext
@@ -7,106 +8,16 @@ from Database.Repositories import cart_repo, user_repo, product_repo
 html_checkout_bp = Blueprint('html_checkout', __name__)
 
 
-# ============================================================
-# CART & USER HELPER FUNCTIONS (Replace these when cart is implemented)
-# ============================================================
-
-def get_current_user_id():
-    """
-    Get the current logged-in user's ID.
-    Preferred: session['user_id'] (set by auth_routes)
-    Fallback: Guest ID 1 (for testing if not logged in)
-    """
-    if 'user_id' in session:
-        return session['user_id']
-    
-    # Optional: You can check Flask-Login's current_user too, 
-    # but since auth_routes sets session, we prioritize that for now.
-    from flask_login import current_user
-    if current_user.is_authenticated:
-        return current_user.id
-        
-    # Default to guest user (ID: 1) for testing
-    return 1
-
-
-def get_cart_items():
-    """
-    Get the current user's cart items.
-    
-    TODO: Replace with actual cart implementation:
-        - Session-based cart: return session.get('cart', [])
-        - Database cart: query cart_items table for user_id
-        - API-based cart: fetch from cart service
-    
-    Returns:
-        list: List of dicts with keys: product_id, product_name, quantity, unit_price
-    """
-    # Check if cart exists in session
-    if 'cart' in session and len(session['cart']) > 0:
-        return session['cart']
-    
-
-    
-    # Fetch from database using the CartRepository
-    user_obj = user_repo.UserRepository.get_user_by_id(get_current_user_id())
-    if not user_obj:
-        return []
-        
-    cart_obj = cart_repo.CartRepository.get_cart_by_user(user_obj)
-    if not cart_obj or cart_obj.is_empty:
-        return []
-
-    # Map ShoppingCart items to the list of dicts format expected by checkout logic
-    db_cart = []
-    for item in cart_obj.items:
-        db_cart.append({
-            'product_id': item.product.id,
-            'product_name': item.product.name,
-            'quantity': item.quantity,
-            'unit_price': item.product.price
-        })
-    
-    return db_cart
-
-
-
-def calculate_cart_total(cart_items):
-    """Calculate total price from cart items."""
-    return sum(item['quantity'] * item['unit_price'] for item in cart_items)
-
-
-def clear_cart():
-    """
-    Clear the user's cart after successful order.
-    
-    TODO: Implement based on your cart storage:
-        - Session: session.pop('cart', None)
-        - Database: DELETE FROM cart_items WHERE user_id = ?
-    """
-    cart_repo.clear_cart(get_current_user_id())
-    if 'cart' in session:
-        session.pop('cart', None)
-
-
-# ============================================================
-# HTML TEMPLATES
-# ============================================================
-
-
-# ============================================================
-# CHECKOUT ROUTE
-# ============================================================
-
 @html_checkout_bp.route('/submit_checkout', methods=['POST'])
 def submit_checkout():
     """Handle HTML form submission for checkout"""
     try:
         # 1. Get current user
-        user_id = get_current_user_id()
-        if user_id is None:
+        if 'user_id' not in session:
             flash("Please login to complete your order.", "error")
             return redirect(url_for('auth.login'))
+        
+        user_id = session['user_id']
         
         # 2. Build shipping address from form
         shipping = ShippingAddress(
@@ -120,23 +31,26 @@ def submit_checkout():
             phone=request.form.get('phone', '')
         )
         
-        # 3. Get cart items and calculate total
-        cart_items = get_cart_items()
-        if not cart_items:
+        # 3. Get cart items and calculate total using CartRepository
+        user_obj = user_repo.UserRepository.get_user_by_id(user_id)
+        cart = CartRepository.get_cart_by_user(user_obj)
+        
+        if not cart or cart.is_empty:
             flash("Your cart is empty. Please add items before checkout.", "error")
             return redirect(url_for('shop.home'))
         
-        total_price = calculate_cart_total(cart_items)
+        # Use the Cart object's total directly
+        total_price = cart.subtotal
         
-        # Convert cart items to OrderItem objects
+        # Convert ShoppingCart items to OrderItem objects
         items = [
             OrderItem(
-                product_id=item['product_id'],
-                product_name=item['product_name'],
-                quantity=item['quantity'],
-                unit_price=item['unit_price']
+                product_id=item.product.id,
+                product_name=item.product.name,
+                quantity=item.quantity,
+                unit_price=item.product.price
             )
-            for item in cart_items
+            for item in cart.items
         ]
         
         # 4. Process payment using Strategy Pattern
@@ -197,7 +111,9 @@ def submit_checkout():
             conn.close()
         
         # 7. Clear the cart after successful order
-        clear_cart()
+        CartRepository.clear_cart(user_id)
+        if 'cart' in session:
+            session.pop('cart', None)
         
         # 8. Return success page
         return render_template(
