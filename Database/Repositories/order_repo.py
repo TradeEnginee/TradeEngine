@@ -3,12 +3,22 @@ from Database.db_manager import get_connection
 
 class OrderRepository:
     @staticmethod
-    def create_order(user_id, cart_items, total_amount, shipping_address, payment_method="Cash", status="Pending"):
+    def create_order(user_id, cart_items, total_amount, shipping_address, payment_method="Cash", status="Pending", cursor=None):
+        """
+        Creates an order in the database.
+        Args:
+            cursor: Optional database cursor. If provided, assumes caller handles commit/rollback.
+        """
         conn = None
+        should_close_conn = False
+        
         try:
-            conn = get_connection()
-            cursor = conn.cursor()
+            if cursor is None:
+                conn = get_connection()
+                cursor = conn.cursor()
+                should_close_conn = True
             
+            # 1. Insert Order
             sql_order = """
             INSERT INTO orders (user_id, total_amount, shipping_address, payment_method, status)
             VALUES (?, ?, ?, ?, ?)
@@ -17,25 +27,40 @@ class OrderRepository:
             
             order_id = cursor.lastrowid
             
+            # 2. Insert Order Items
             sql_item = """
             INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase)
             VALUES (?, ?, ?, ?)
             """
             
             for item in cart_items:
-                cursor.execute(sql_item, (order_id, item['product_id'], item['quantity'], item['price']))
+                # Handle both dict (from db cart) and object (from request) if needed
+                # Current usage in checkout is objects, but this repo signature expects items list 
+                # Let's standardize the input expectation. 
+                # If item is dict (old way):
+                p_id = item.get('product_id') if isinstance(item, dict) else item.product_id
+                qty = item.get('quantity') if isinstance(item, dict) else item.quantity
+                price = item.get('price') if isinstance(item, dict) else (item.unit_price if hasattr(item, 'unit_price') else 0)
+                
+                cursor.execute(sql_item, (order_id, p_id, qty, price))
             
-            conn.commit()
-            print(f"✅ Order #{order_id} created successfully.")
+            if should_close_conn:
+                conn.commit()
+                print(f"✅ Order #{order_id} created successfully.")
+            
             return order_id
             
         except Exception as e:
-            if conn:
+            if should_close_conn and conn:
                 conn.rollback()
             print(f"❌ Error creating order: {e}")
+            # If we are part of a transaction (external cursor), we should re-raise the exception
+            # so the caller knows to rollback too.
+            if not should_close_conn:
+                raise e
             return None
         finally:
-            if conn:
+            if should_close_conn and conn:
                 conn.close()
 
     @staticmethod

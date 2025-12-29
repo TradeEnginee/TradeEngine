@@ -223,6 +223,36 @@ class ProductRepository:
             if conn: conn.close()
 
     # =========================================================
+    # Update: Reduce Stock (Thread-Safe Transaction)
+    # =========================================================
+    @staticmethod
+    def reduce_stock(product_id, quantity, cursor=None):
+        conn = None
+        try:
+            # If no cursor provided, open a new connection (isolated transaction)
+            if cursor is None:
+                conn = get_connection()
+                cursor = conn.cursor()
+            
+            # Perform update
+            sql = "UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?"
+            cursor.execute(sql, (quantity, product_id))
+            
+            # If we own the connection, commit and close
+            if conn:
+                conn.commit()
+                return cursor.rowcount > 0
+            
+            # If external cursor, just return success (caller commits)
+            return True
+            
+        except Exception as e:
+            print(f" Error reducing stock: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    # =========================================================
     # Delete: Remove Product
     # =========================================================
     @staticmethod
