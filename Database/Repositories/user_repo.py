@@ -114,6 +114,24 @@ class UserRepository:
             if conn:
                 conn.close()
 
+    @staticmethod
+    def get_user_by_id(user_id):
+        conn = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            sql = "SELECT * FROM users WHERE id = ?"
+            cursor.execute(sql, (user_id,))
+            user = cursor.fetchone()
+            return UserRepository._map_row_to_object(user)
+        except Exception as e:
+            print(f"❌ Error fetching user: {e}")
+            return None
+        finally:
+            if conn:
+                conn.close()
+
 
     @staticmethod
     def update_user(user_id, username=None, email=None, password=None, mobile=None, specific_info=None):
