@@ -10,8 +10,11 @@ def view_cart():
         flash("Please login to view your cart.", "error")
         return redirect(url_for('auth.login'))
 
-    user = session.get('username')
-    user = UserRepository.get_user_by_username(user)
+    user_id = session.get('user_id')
+    user = UserRepository.get_user_by_id(user_id)
+    if not user:
+        flash("User not found. Please login again.", "error")
+        return redirect(url_for('auth.login'))
     cart = CartRepository.get_cart_by_user(user)
     return render_template('cart.html', cart=cart)
 
