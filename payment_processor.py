@@ -58,7 +58,7 @@ class CreditCardStrategy(PaymentProcessor):
             year = int(payment_data["expiry_year"])
             if month < 1 or month > 12:
                 return False, "Invalid expiry month"
-            if year < 2024:
+            if year < 2026:
                 return False, "Card has expired"
         except ValueError:
             return False, "Invalid expiry date"
