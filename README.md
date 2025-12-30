@@ -32,6 +32,7 @@ Database (SQLite)
 
 ## 📂 Project Structure
 
+```
 project/
 │
 ├── app.py
@@ -59,6 +60,7 @@ project/
 │ └── shop.py
 │
 └── templates/
+```
 
 ---
 
@@ -106,35 +108,32 @@ The system uses an abstract base class to define common product attributes:
 
 **Class Hierarchy:**
 
+```text
 Product (Abstract)
 │
 ▼
 DetailedProduct
 │
-├── DetailedCosmeticsProduct
-├── DetailedFoodProduct
-├── DetailedClothesProduct
-└── DetailedSportsProduct
+├── DetailedComputerProduct
+├── DetailedPrinterProduct
+├── DetailedScannerProduct
+└── DetailedIndustrialMachineProduct
+```
 
 **DetailedProduct Responsibilities:**
 
-- Stock management
-- Review system integration
-- Full product detail generation
-
-**Key Methods:**
-
-- `get_stock_status()`
-- `get_full_details()`
+- Stock management  
+- Review system integration  
+- Full product detail generation  
 
 **Product-Specific Implementations:**
 
-| Product Type | Additional Attributes        |
-|--------------|------------------------------|
-| Cosmetics    | brand, skin_type            |
-| Food         | expiry_date                 |
-| Clothes      | brand, size                 |
-| Sports       | material, sport_type        |
+| Product Type            | Additional Attributes           |
+|-------------------------|--------------------------------|
+| Computer                | brand, cpu, ram, storage       |
+| Printer                 | brand, type, connectivity      |
+| Scanner                 | brand, resolution, type        |
+| IndustrialMachine       | brand, power, usage_type       |
 
 ---
 
@@ -240,9 +239,6 @@ All relationships maintain referential integrity.
 
 ## 🚀 Future Enhancements
 
-- Payment integration  
-- Admin dashboard  
-- Wishlist and recommendations  
 - Pagination and filtering  
 - Enhanced semantic search  
 
