@@ -13,7 +13,7 @@ TradeEngine is a web-based marketplace platform designed to facilitate buying, s
 
 ## 📱 About The Project
 
-This project was developed as the final project for ITI (Information Technology Institute). TradeEngine provides an intuitive interface for users to explore machines, manage orders, and interact with the platform securely. Admins can manage products, view orders, and monitor platform activity.
+TradeEngine provides an intuitive interface for users to explore machines, manage orders, and interact with the platform securely. Admins can manage products, view orders, and monitor platform activity.
 
 ---
 
