@@ -210,3 +210,26 @@ class UserRepository:
         finally:
             if conn:
                 conn.close()
+
+    # =========================
+    # Get All Users (For Admin)
+    # =========================
+    @staticmethod
+    def get_all_users():
+        conn = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            sql = "SELECT * FROM users ORDER BY created_at DESC"
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+
+            return [UserRepository._map_row_to_object(row) for row in rows]
+            
+        except Exception as e:
+            print(f"❌ Error fetching users: {e}")
+            return []
+        finally:
+            if conn:
+                conn.close()
