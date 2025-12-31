@@ -99,14 +99,23 @@ def submit_checkout():
                 
             # 6. Reduce inventory stock (using same cursor)
             for item in items:
-                # Reduce inventory stock
-                product_repo.ProductRepository.reduce_stock(item.product_id, item.quantity, cursor=cursor)
-        
+               success = product_repo.ProductRepository.reduce_stock(
+                    item.product_id,
+                    item.quantity,
+                    cursor=cursor
+                )
+               if not success:
+                    raise Exception(
+                        f"Not enough stock for product ID {item.product_id}. Please adjust your cart."
+                    )
+
             conn.commit()
-            
         except Exception as e:
             conn.rollback()
             raise e
+            flash(str(e), "error")
+            return redirect(url_for('checkout_page'))
+
         finally:
             conn.close()
         
