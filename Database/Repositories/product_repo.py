@@ -235,8 +235,13 @@ class ProductRepository:
                 cursor = conn.cursor()
             
             # Perform update
-            sql = "UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?"
-            cursor.execute(sql, (quantity, product_id))
+            sql = """
+                   UPDATE products
+                   SET stock_quantity = stock_quantity - ?
+                   WHERE id = ? AND stock_quantity >= ?
+                """
+            cursor.execute(sql, (quantity, product_id, quantity))
+
             
             # If we own the connection, commit and close
             if conn:

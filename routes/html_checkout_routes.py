@@ -86,27 +86,35 @@ def submit_checkout():
             # Create Order (OrderRepo now handles order & items)
             order_id = OrderRepository.create_order(
                 user_id=user_id,
-                cart_items=items, # items is List[OrderItem]
+                cart_items=items,  # items is List[OrderItem]
                 total_amount=total_price,
                 shipping_address=shipping.to_json(),
                 payment_method=payment_method,
                 status='confirmed',
-                cursor=cursor # Pass cursor to keep transaction open
+                cursor=cursor  # Pass cursor to keep transaction open
             )
             
             if not order_id:
                 raise Exception("Failed to create order in database.")
-                
+            
             # 6. Reduce inventory stock (using same cursor)
             for item in items:
-                # Reduce inventory stock
-                product_repo.ProductRepository.reduce_stock(item.product_id, item.quantity, cursor=cursor)
-        
-            conn.commit()
+                success = product_repo.ProductRepository.reduce_stock(
+                    item.product_id,
+                    item.quantity,
+                    cursor=cursor
+                )
+                if not success:
+                    raise Exception(
+                        f"Not enough stock for product ID {item.product_id}. Please adjust your cart."
+                    )
             
+            conn.commit()
         except Exception as e:
             conn.rollback()
-            raise e
+            flash(str(e), "error")
+            return redirect(url_for('checkout_page'))
+        
         finally:
             conn.close()
         
@@ -123,7 +131,6 @@ def submit_checkout():
             method="Cash on Delivery" if payment_method == 'cod' else "Credit Card",
             status="Confirmed"
         )
-        
     except Exception as e:
         flash(f"An unexpected error occurred: {str(e)}", "error")
         return redirect(url_for('checkout_page'))
