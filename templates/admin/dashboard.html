@@ -27,9 +27,11 @@
             <h3 style="color: #777; margin: 10px 0;">Customers</h3>
             <h2 style="font-size: 40px; color: #2c3e50; margin: 0;">{{ stats.users }}</h2>
             
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                <span style="color: #999; font-size: 14px;">Active Users</span>
-            </div>
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+            <a href="{{ url_for('admin.manage_users') }}" style="color: var(--primary-color); font-weight: bold; text-decoration: none;">
+                Manage Users <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
         </div>
 
         <div style="background: white; padding: 30px; border-radius: 10px; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; border-bottom: 4px solid #28a745;">
@@ -38,8 +40,10 @@
             <h2 style="font-size: 40px; color: #2c3e50; margin: 0;">{{ stats.orders }}</h2>
             
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                <span style="color: #999; font-size: 14px;">Total Sales</span>
-            </div>
+            <a href="{{ url_for('admin.manage_orders') }}" style="color: #28a745; font-weight: bold; text-decoration: none;">
+                Manage Orders <i class="fa-solid fa-arrow-right"></i>
+    </a>
+</div>
         </div>
         
     </div>
