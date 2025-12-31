@@ -1,6 +1,9 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request
-from Database.Repositories.product_repo import ProductRepository # 👈 استيراد الريبو
-from models.product_model import Product # 👈 ضيف دي عشان نكريت أوبجيكت جديد
+from Database.Repositories.product_repo import ProductRepository
+from models.product_model import Product
+from Database.Repositories.user_repo import UserRepository
+from Database.Repositories.order_repo import OrderRepository
+import json
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -44,11 +47,7 @@ def delete_product(product_id):
         flash("Error deleting product.", "error")
         
     return redirect(url_for('admin.manage_products'))
-# ... (نفس الـ imports)
 
-# ================================
-# 1. إضافة منتج (معدلة)
-# ================================
 @admin_bp.route('/products/add', methods=['GET', 'POST'])
 def add_product():
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -58,20 +57,17 @@ def add_product():
         name = request.form['name']
         price = float(request.form['price'])
         stock = int(request.form['stock_quantity'])
-        category = request.form['category'] # ده هيجيب اللي اختاره أو اللي كتبه جديد
+        category = request.form['category']
         image_url = request.form['image_url']
         
-        # --- تجميع الـ Details الديناميكية ---
-        keys = request.form.getlist('detail_key[]')   # قائمة المفاتيح (Color, Brand...)
-        values = request.form.getlist('detail_val[]') # قائمة القيم (Red, Dell...)
+        keys = request.form.getlist('detail_key[]')
+        values = request.form.getlist('detail_val[]')
         
-        # دمجهم في قاموس واحد
         details_dict = {}
         for k, v in zip(keys, values):
-            if k.strip(): # لو المفتاح مش فاضي
+            if k.strip():
                 details_dict[k.strip()] = v.strip()
         
-        # إنشاء المنتج
         new_product = Product(None, name, price, image_url, category, stock, details_dict)
         
         if ProductRepository.add_product(new_product):
@@ -80,14 +76,11 @@ def add_product():
         else:
             flash("Error adding product.", "error")
             
-    # GET: هات التصنيفات الموجودة عشان تظهر في القائمة
     existing_categories = ProductRepository.get_all_categories()
     return render_template('admin/add_edit_product.html', product=None, categories=existing_categories)
 
 
-# ================================
-# 2. تعديل منتج (معدلة)
-# ================================
+
 @admin_bp.route('/products/edit/<int:product_id>', methods=['GET', 'POST'])
 def edit_product(product_id):
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -104,7 +97,6 @@ def edit_product(product_id):
         category = request.form['category']
         image_url = request.form['image_url']
         
-        # --- تجميع الـ Details الديناميكية ---
         keys = request.form.getlist('detail_key[]')
         values = request.form.getlist('detail_val[]')
         
@@ -124,3 +116,99 @@ def edit_product(product_id):
             
     existing_categories = ProductRepository.get_all_categories()
     return render_template('admin/add_edit_product.html', product=product, categories=existing_categories)
+
+
+
+
+@admin_bp.route('/users')
+def manage_users():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('auth.login'))
+        
+    users = UserRepository.get_all_users()
+    return render_template('admin/users.html', users=users)
+
+
+
+@admin_bp.route('/users/delete/<int:user_id>')
+def delete_user(user_id):
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('auth.login'))
+    
+    if user_id == session['user_id']:
+        flash("You cannot delete your own account!", "error")
+        return redirect(url_for('admin.manage_users'))
+
+    if UserRepository.delete_user(user_id):
+        flash("User deleted successfully.", "success")
+    else:
+        flash("Error deleting user.", "error")
+        
+    return redirect(url_for('admin.manage_users'))
+
+
+@admin_bp.route('/users/<int:user_id>')
+def user_details(user_id):
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('auth.login'))
+    
+    user = UserRepository.get_user_by_id(user_id)
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for('admin.manage_users'))
+
+    raw_orders = OrderRepository.get_user_orders(user_id)
+    
+    orders_data = []
+    for row in raw_orders:
+        try:
+            shipping = json.loads(row['shipping_address'])
+        except:
+            shipping = {}
+            
+        orders_data.append({
+            'id': row['id'],
+            'total': row['total_amount'],
+            'status': row['status'],
+            'date': row['created_at'],
+            'payment': row['payment_method'],
+            'city': shipping.get('city', 'Unknown')
+        })
+
+    return render_template('admin/user_details.html', user=user, orders=orders_data)
+
+@admin_bp.route('/orders')
+def manage_orders():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('auth.login'))
+        
+    raw_orders = OrderRepository.get_all_orders()
+    
+    orders_data = []
+    for row in raw_orders:
+        orders_data.append({
+            'id': row['id'],
+            'username': row['username'],
+            'date': row['created_at'],
+            'total': row['total_amount'],
+            'payment': row['payment_method'],
+            'status': row['status']
+        })
+
+    return render_template('admin/orders.html', orders=orders_data)
+
+
+
+@admin_bp.route('/orders/update-status/<int:order_id>', methods=['POST'])
+def update_order_status(order_id):
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('auth.login'))
+    
+    new_status = request.form.get('status')
+    
+    if OrderRepository.update_order_status(order_id, new_status):
+        flash(f"Order #{order_id} status updated to {new_status}.", "success")
+    else:
+        flash("Failed to update status.", "error")
+        
+    return redirect(url_for('admin.manage_orders'))
