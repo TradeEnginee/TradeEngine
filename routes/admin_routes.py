@@ -18,10 +18,12 @@ def dashboard():
         return redirect(url_for('shop.home'))
 
     products = ProductRepository.get_all_products()
+    users = UserRepository.get_all_users()
+    orders = OrderRepository.get_all_orders()
     stats = {
         'products': len(products),
-        'users': 1,
-        'orders': 0
+        'users': len(users),
+        'orders': len(orders)
     }
     
     return render_template('admin/dashboard.html', stats=stats)
