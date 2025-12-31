@@ -179,7 +179,7 @@ def my_orders():
             'total': row['total_amount'],
             'payment': row['payment_method'],
             'shipping': shipping_info,
-            'items': items
+            'products': items
         })
     
     return render_template('orders.html', orders=orders_data)
