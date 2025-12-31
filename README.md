@@ -55,7 +55,8 @@ TradeEngine provides an intuitive interface for users to explore machines, manag
 
 ## 📸 Screenshots
 
-- **Home Page** – Browse categories and products  
+- **Home Page** – Browse categories and products  ![WhatsApp Image 2025-12-31 at 2 46 36 PM (1)](https://github.com/user-attachments/assets/5a225ecf-6538-41b2-b2a4-68fd35d73f0d)
+
 - **Product Detail** – View machine specs and customer reviews  <img width="1600" height="798" alt="image" src="https://github.com/user-attachments/assets/5fd0abd1-cf3e-4a6b-b783-013651b7368f" />
 
 - **Customer Reviews** – Review Rating  <img width="1600" height="803" alt="image" src="https://github.com/user-attachments/assets/9d05e353-7dac-4a77-96fe-31ee27064e37" />
