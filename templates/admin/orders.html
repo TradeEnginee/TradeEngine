@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="padding: 40px; max-width: 1200px; margin: 0 auto;">
+    
+    <div style="margin-bottom: 30px;">
+        <h1 style="color: #333;">Manage Orders 📦</h1>
+    </div>
+
+    <div style="background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; text-align: left; color: #555;">
+                    <th style="padding: 15px;">ID</th>
+                    <th style="padding: 15px;">Customer</th>
+                    <th style="padding: 15px;">Date</th>
+                    <th style="padding: 15px;">Payment</th>
+                    <th style="padding: 15px;">Total</th>
+                    <th style="padding: 15px;">Status</th>
+                    <th style="padding: 15px;">Update Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 15px; font-weight: bold; color: #666;">#{{ order.id }}</td>
+                    
+                    <td style="padding: 15px; font-weight: bold; color: var(--primary-color);">
+                        <i class="fa-regular fa-user"></i> {{ order.username }}
+                    </td>
+                    
+                    <td style="padding: 15px; font-size: 14px; color: #777;">{{ order.date }}</td>
+                    <td style="padding: 15px;">{{ order.payment }}</td>
+                    <td style="padding: 15px; font-weight: bold;">${{ order.total }}</td>
+                    
+                    <td style="padding: 15px;">
+                        <span style="padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold;
+                        background: 
+                            {% if order.status == 'Delivered' %}#d4edda
+                            {% elif order.status == 'Shipped' %}#cce5ff
+                            {% elif order.status == 'Cancelled' %}#f8d7da
+                            {% else %}#fff3cd{% endif %};
+                        color: 
+                            {% if order.status == 'Delivered' %}#155724
+                            {% elif order.status == 'Shipped' %}#004085
+                            {% elif order.status == 'Cancelled' %}#721c24
+                            {% else %}#856404{% endif %};">
+                            {{ order.status }}
+                        </span>
+                    </td>
+
+                    <td style="padding: 15px;">
+                        <form action="{{ url_for('admin.update_order_status', order_id=order.id) }}" method="POST" style="display: flex; gap: 5px;">
+                            <select name="status" style="padding: 5px; border-radius: 5px; border: 1px solid #ddd; font-size: 13px;">
+                                <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                                <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                                <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                            <button type="submit" style="background: var(--secondary-color); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="{{ url_for('admin.dashboard') }}" style="color: #666; text-decoration: none; font-weight: bold;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+</div>
+{% endblock %}
