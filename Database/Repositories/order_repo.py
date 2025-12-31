@@ -103,3 +103,46 @@ class OrderRepository:
         finally:
             if conn:
                 conn.close()
+
+    @staticmethod
+    def get_all_orders():
+        conn = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+    
+            sql = """
+            SELECT o.*, u.username 
+            FROM orders o 
+            JOIN users u ON o.user_id = u.id 
+            ORDER BY o.created_at DESC
+            """
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            return rows 
+            
+        except Exception as e:
+            print(f"❌ Error fetching all orders: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+
+    @staticmethod
+    def update_order_status(order_id, new_status):
+        conn = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            sql = "UPDATE orders SET status = ? WHERE id = ?"
+            cursor.execute(sql, (new_status, order_id))
+            conn.commit()
+            
+            return cursor.rowcount > 0
+        except Exception as e:
+            print(f"❌ Error updating order status: {e}")
+            return False
+        finally:
+            if conn: conn.close()
